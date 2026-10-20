@@ -6,7 +6,7 @@
 <title>BellBites - food before the bell</title>
 <meta name="referrer" content="no-referrer">
 <!-- CSP: nothing loads from outside and nothing can be sent out. If you edit the JavaScript at the bottom, run: python3 update_csp.py bellbite.html -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-+Q0mZFipxjk1lrra3Ip/Q6MNQSaIB92wuuuh8Zkpc0M='; style-src 'unsafe-inline'; img-src data:; font-src 'none'; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-SMD/Ct95cfSUUh3UFlYZF+8BqDV03MZm8n/2MnHTpOg='; style-src 'unsafe-inline'; img-src data:; font-src 'none'; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'">
 <style>
 :root{
   --bg:#F4EFE4; --card:#FFFCF5; --ink:#1B1915; --muted:#6B665A; --line:#E2DAC8;
@@ -394,8 +394,8 @@ const lock={fails:0,until:0};
 
 function loadStudent(){
   const o=store.get(K_STU); if(!o||typeof o!=='object')return;
-  S.budget=int(o.budget,10,500,60);
-  S.spent=int(o.spent,0,100000,0);
+  S.budget=int(o.budget,1,SAFE,60);
+  S.spent=int(o.spent,0,SAFE,0);
   S.deadline=int(o.deadline,0,SAFE,0);
   S.started=!!o.started&&S.deadline>0;
   S.premiumUntil=int(o.premiumUntil,0,SAFE,0);
@@ -691,17 +691,17 @@ function showToast(){
 /* ---------- screens ---------- */
 function gate(){
   const editing=S.started;
-  const mins=editing&&!over()?Math.max(5,Math.round(leftMin())):20;
-  const minB=Math.max(10,S.spent);
+  const mins=editing&&!over()?Math.max(1,Math.round(leftMin())):20;
+  const minB=Math.max(1,S.spent);
   openModal(`<h2 id="mTitle">${editing?'Update your break':'Before the bell rings'}</h2>
     <p class="sub">${editing?'Change your total budget or restart the break timer.':'Two numbers, and we sort the canteen for you.'}</p>
     <form id="gateForm" novalidate>
     <label for="gB">Total budget for today (₹)</label>
-    <input id="gB" type="number" inputmode="numeric" min="${minB}" max="500" value="${S.budget}" data-autofocus>
+    <input id="gB" type="number" inputmode="numeric" min="${minB}" value="${S.budget}" data-autofocus>
     ${S.spent?`<p class="hint">You've already spent ₹${S.spent}, so ₹${remaining()} is left now.</p>`:''}
     <div class="chips" role="group" aria-label="Quick budget">${[20,30,40,60,80,100].map(v=>`<button type="button" data-act="setB" data-v="${v}">₹${v}</button>`).join('')}</div>
     <label for="gM">Minutes until your next class</label>
-    <input id="gM" type="number" inputmode="numeric" min="5" max="90" value="${mins}">
+    <input id="gM" type="number" inputmode="numeric" min="1" value="${mins}">
     <div class="chips" role="group" aria-label="Quick minutes">${[10,15,20,30,45].map(v=>`<button type="button" data-act="setM" data-v="${v}">${v} min</button>`).join('')}</div>
     <button type="submit" class="btn primary big">${editing?'Save':'Show me food'}</button>
     </form>`,{closable:S.started});
@@ -956,10 +956,10 @@ document.addEventListener('submit',e=>{
   e.preventDefault();
   const f=e.target.id;
   if(f==='gateForm'){
-    const b=Number($('#gB').value),m=Number($('#gM').value),minB=Math.max(10,S.spent);
-    if(!(Number.isInteger(b)&&b>=minB&&b<=500)){flash(`Budget should be a whole number from ₹${minB} to ₹500`);return}
-    if(!(Number.isInteger(m)&&m>=5&&m<=90)){flash('Class time should be 5 to 90 minutes');return}
-    const same=S.started&&!over()&&m===Math.max(5,Math.round(leftMin()));
+    const b=Number($('#gB').value),m=Number($('#gM').value),minB=Math.max(1,S.spent);
+    if(!(Number.isSafeInteger(b)&&b>=minB)){flash(`Budget should be a whole number, at least ₹${minB}`);return}
+    if(!(Number.isSafeInteger(m)&&m>=1&&Date.now()+m*60000<8.64e15)){flash('Enter the minutes until class as a whole number, at least 1');return}
+    const same=S.started&&!over()&&m===Math.max(1,Math.round(leftMin()));
     S.budget=b;
     if(!same)S.deadline=Date.now()+m*60000;
     const first=!S.started;S.started=true;
