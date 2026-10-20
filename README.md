@@ -1,6 +1,6 @@
 # BellBites: food before the bell
 
-> XIM chapter: IEEE TechTank contest prototype
+> IEEE (XIM CHAPTER) -> TechTank contest prototype
 
 **The problem:** you have 20 minutes between classes, ₹60 in your pocket, and a canteen queue that takes longer than your syllabus.
 
