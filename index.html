@@ -1,0 +1,1016 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>BellBites - food before the bell</title>
+<meta name="referrer" content="no-referrer">
+<!-- CSP: nothing loads from outside and nothing can be sent out. If you edit the JavaScript at the bottom, run: python3 update_csp.py bellbite.html -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-+Q0mZFipxjk1lrra3Ip/Q6MNQSaIB92wuuuh8Zkpc0M='; style-src 'unsafe-inline'; img-src data:; font-src 'none'; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'">
+<style>
+:root{
+  --bg:#F4EFE4; --card:#FFFCF5; --ink:#1B1915; --muted:#6B665A; --line:#E2DAC8;
+  --accent:#D23A22; --accent-d:#B02E19; --good:#1E7A4C; --good-bg:#E3F2E8;
+  --warn:#8A5A00; --warn-bg:#FBEBC4; --bad:#B3321F; --bad-bg:#FBE0DA; --gold:#F2B632;
+  --focus:#1B57D6;
+  --head:'Avenir Next','Segoe UI Variable Display','Trebuchet MS',system-ui,sans-serif;
+  --body:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --r:18px;
+}
+*{box-sizing:border-box;margin:0}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{font-family:var(--body);background:var(--bg);color:var(--ink);line-height:1.4;min-height:100vh;
+  background-image:radial-gradient(circle at 12% -10%,#FBE3C8 0,transparent 38%),radial-gradient(circle at 100% 0,#F9D9D1 0,transparent 30%);
+  background-attachment:fixed}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:disabled{cursor:not-allowed}
+input{font:inherit}
+h1,h2,h3{font-family:var(--head);letter-spacing:-.02em}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.pick :focus-visible{outline-color:#fff}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.skip{position:absolute;left:-999px;top:8px;z-index:100;background:var(--ink);color:#fff;padding:10px 14px;border-radius:10px;font-weight:700}
+.skip:focus{left:12px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* header */
+.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:8px 12px;flex-wrap:wrap;
+  padding:10px clamp(14px,3vw,32px);background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:8px;font-family:var(--head);font-weight:800;font-size:22px;letter-spacing:-.03em}
+.brand svg{color:var(--accent)}
+.hacts{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.hbtn{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 14px;border-radius:99px;border:1.5px solid var(--ink);background:var(--card);font-weight:700;font-size:14px;white-space:nowrap}
+.hbtn.icon{width:44px;padding:0;justify-content:center;font-size:18px}
+.hbtn.gold{background:var(--gold)}
+.hbtn.on{background:var(--ink);color:var(--gold)}
+.prem-badge{position:relative;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;background:var(--ink);color:var(--gold);padding:5px 10px;border-radius:99px;font-family:var(--body)}
+.prem-badge::after{content:'';position:absolute;inset:-10px -4px}
+.cnt{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 6px;border-radius:99px;background:var(--accent);color:#fff;font-size:12px}
+.tag.mgr{background:var(--ink);color:var(--gold);padding:8px 12px;border-radius:99px;font-weight:700;font-size:13px}
+.clock{display:flex;align-items:baseline;gap:8px;background:var(--ink);color:#fff;padding:8px 14px;border-radius:14px;white-space:nowrap;min-height:44px}
+.clock .lbl{font-size:12px;opacity:.8}
+.clock b{font-family:var(--head);font-size:22px;font-variant-numeric:tabular-nums;letter-spacing:0}
+.clock.warn{background:var(--accent)}
+.clock.warn b{animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.55}}
+
+/* layout */
+.wrap{max-width:1180px;margin:0 auto;padding:22px clamp(14px,3vw,32px) 40px}
+.layout{display:grid;grid-template-columns:1fr 340px;gap:26px;align-items:start}
+.hero h1{font-size:clamp(26px,4.4vw,42px);line-height:1.05;font-weight:800;max-width:18ch}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.hero p{color:var(--muted);margin-top:8px;max-width:48ch}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:18px 0 12px}
+.pill{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:8px 14px;border:1.5px solid var(--ink);border-radius:99px;font-weight:700;font-size:14px;background:var(--card)}
+.pill small{font-weight:500;color:var(--muted);text-decoration:underline}
+.seg{display:flex;gap:4px;padding:4px;background:#E9E1CF;border-radius:99px;overflow-x:auto;max-width:100%}
+.seg button{min-height:38px;padding:7px 14px;border-radius:99px;font-size:13px;font-weight:700;color:#4F4A40;white-space:nowrap}
+.seg button[aria-pressed=true]{background:var(--ink);color:#fff}
+.queue{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center;font-size:13px;color:var(--muted);margin-bottom:14px}
+.queue b{color:var(--ink)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-right:6px;animation:pulse 1.4s infinite}
+.link{text-decoration:underline;font-weight:700;color:var(--ink);padding:10px 4px}
+
+/* smart pick */
+.pick{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;background:var(--ink);color:#fff;border-radius:var(--r);padding:16px 18px;margin-bottom:18px}
+.pick .k{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}
+.pick .t{font-family:var(--head);font-size:19px;font-weight:600;margin-top:2px}
+.pick .s{font-size:13px;opacity:.85;margin-top:2px}
+
+/* cards */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(205px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px;transition:transform .15s,box-shadow .15s}
+.card:hover{transform:translateY(-2px);box-shadow:0 8px 22px -12px rgba(27,25,21,.35)}
+.card.slow{border-style:dashed}
+.card.slow .ico{filter:grayscale(.7)}
+.ctop{display:flex;gap:12px;align-items:center}
+.ico{width:58px;height:58px;flex:none;border-radius:16px;display:grid;place-items:center;font-size:30px;background:var(--t)}
+.card h3{font-size:16px;font-weight:600;line-height:1.15}
+.price{font-family:var(--head);font-weight:800;font-size:20px}
+.meta{display:flex;gap:12px;font-size:13px;color:var(--muted)}
+.meta .star{color:#8F5B00;font-weight:700}
+.st{display:flex;flex-direction:column;gap:1px;font-size:12.5px;padding:6px 9px;border-radius:8px;align-self:flex-start;text-align:left}
+.st b{font-weight:700}
+.st small{font-size:11.5px;font-weight:500}
+.st.ok{background:var(--good-bg);color:var(--good)}
+.st.pm{background:var(--warn-bg);color:var(--warn);border:1px solid transparent}
+button.st.pm:hover{border-color:var(--warn)}
+.st.no{background:var(--bad-bg);color:var(--bad)}
+.st.out{background:#E6E0D2;color:#4C473D}
+.cfoot{display:flex;justify-content:space-between;align-items:center;margin-top:auto;gap:8px}
+.add{min-height:44px;padding:0 18px;border-radius:12px;background:var(--ink);color:#fff;font-weight:700;font-size:14px}
+.add:disabled{background:#CFC8B8;color:#4C473D}
+.add:active{transform:scale(.96)}
+.step{display:inline-flex;align-items:center;gap:2px;background:#EFE8D8;border-radius:12px;padding:3px}
+.step button{width:40px;height:40px;border-radius:9px;font-weight:800;font-size:18px;background:var(--card)}
+.step span{min-width:26px;text-align:center;font-weight:700}
+.hiddennote{margin-top:16px;font-size:13px;color:var(--muted)}
+
+/* cart */
+.cart{position:sticky;top:96px;background:var(--card);border:1.5px solid var(--ink);border-radius:var(--r);padding:18px;box-shadow:6px 6px 0 var(--ink)}
+.cart-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.cart h2{font-size:22px}
+.cart .empty{color:var(--muted);font-size:14px}
+.lines{list-style:none;padding:0;display:flex;flex-direction:column;gap:10px;margin:8px 0 14px}
+.lines li{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px}
+.lines .n{display:flex;flex-direction:column}
+.lines .n small{color:var(--muted)}
+.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px 0 8px}
+.sum div{display:flex;flex-direction:column;font-size:12px;color:var(--muted)}
+.sum b{font-family:var(--head);font-size:19px;color:var(--ink)}
+.brk{font-size:12.5px;color:var(--muted);padding-bottom:12px;border-bottom:1px dashed var(--line);margin-bottom:12px}
+.verdict{padding:10px 12px;border-radius:12px;font-size:13.5px;font-weight:500;margin-bottom:12px}
+.verdict.good{background:var(--good-bg);color:var(--good)}
+.verdict.bad{background:var(--bad-bg);color:var(--bad)}
+.verdict button{display:block;margin-top:6px;font-weight:700;text-decoration:underline;padding:6px 0}
+.mob{display:none}
+.cartbar{display:none}
+
+/* buttons */
+.btn{display:block;width:100%;min-height:46px;padding:13px 16px;border-radius:14px;font-weight:700;font-size:15px;text-align:center}
+.btn.primary{background:var(--accent);color:#fff}
+.btn.primary:hover{background:var(--accent-d)}
+.btn:disabled{background:#CFC8B8;color:#4C473D}
+.btn.gold{background:var(--gold);color:var(--ink)}
+.btn.dark{background:var(--ink);color:#fff}
+.btn.line{border:1.5px solid var(--ink);background:var(--card)}
+.btn.ghost{color:#4F4A40;margin-top:4px}
+.btn.big{padding:16px;font-size:16px}
+.btn.sm{width:auto;display:inline-block;min-height:44px;padding:10px 16px;background:var(--gold);color:var(--ink)}
+.btn.small{width:auto;display:inline-block;min-height:44px;padding:10px 16px;font-size:14px}
+
+/* modal */
+#modal{position:fixed;inset:0;z-index:50;display:none}
+#modal.on{display:block}
+.scrim{position:absolute;inset:0;background:rgba(27,25,21,.55);backdrop-filter:blur(3px)}
+.sheet{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(440px,calc(100vw - 28px));max-height:calc(100vh - 28px);overflow:auto;
+  background:var(--card);border-radius:24px;padding:26px;box-shadow:0 30px 80px -20px rgba(0,0,0,.5);animation:pop .22s ease-out}
+@keyframes pop{from{opacity:0;transform:translate(-50%,-47%) scale(.97)}}
+.sheet h2{font-size:28px;line-height:1.05;margin-bottom:6px}
+.sheet p.sub{color:var(--muted);margin-bottom:16px}
+.sheet label,.sheet legend{display:block;font-size:13px;font-weight:700;margin:14px 0 6px}
+.sheet fieldset{border:0;padding:0;min-width:0}
+.sheet input[type=number],.sheet input[type=text],.sheet input[type=password]{width:100%;min-height:48px;padding:12px 14px;border:1.5px solid var(--ink);border-radius:12px;background:#fff;font-size:18px;font-weight:700}
+.hint{font-size:13px;color:var(--muted);margin-top:6px}
+.err{color:var(--bad);font-weight:700;font-size:14px;min-height:20px;margin-top:10px}
+.note{font-size:12.5px;color:var(--muted);background:#EFE8D8;border-radius:10px;padding:10px 12px;margin-top:14px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.chips button{min-height:44px;padding:0 14px;border-radius:99px;border:1.5px solid var(--line);background:#fff;font-weight:700;font-size:13px}
+.chips button:hover{border-color:var(--ink)}
+.sheet .btn.big{margin-top:20px}
+.fine{font-size:12px;color:var(--muted);text-align:center;margin-top:10px}
+.ribbon{display:inline-block;background:var(--accent);color:#fff;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:5px 10px;border-radius:99px;margin-bottom:10px}
+.ribbon.good{background:var(--good)}
+.ribbon.grey{background:#4F4A40}
+.pr{display:flex;align-items:baseline;gap:10px;margin:6px 0 14px}
+.pr b{font-family:var(--head);font-size:46px;line-height:1;font-weight:800}
+.pr s{color:var(--muted);font-size:20px}
+.pr span{color:var(--muted)}
+.perks{list-style:none;padding:0;display:flex;flex-direction:column;gap:9px;font-size:14.5px}
+.perks li{display:flex;gap:10px}
+.perks li::before{content:"⚡";flex:none}
+.pay{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+.opt{display:flex;gap:12px;align-items:flex-start;padding:13px;border:1.5px solid var(--line);border-radius:14px;cursor:pointer;background:#fff;margin:0!important;font-size:inherit!important}
+.opt:has(input:checked){border-color:var(--ink);box-shadow:3px 3px 0 var(--ink)}
+.opt:has(input:focus-visible){outline:3px solid var(--focus);outline-offset:2px}
+.opt input{margin-top:4px;accent-color:var(--accent);width:18px;height:18px}
+.opt b{display:block}
+.opt small{color:var(--muted);font-weight:400}
+.upi{margin-top:8px}
+.upi input{font-size:15px!important;min-height:44px!important;padding:10px 12px!important}
+.token{font-family:var(--head);font-size:64px;font-weight:800;line-height:1;margin:6px 0 12px;color:var(--accent)}
+.big-t{font-family:var(--head);font-size:34px;font-weight:800;font-variant-numeric:tabular-nums}
+.orow{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:14px;padding:5px 0}
+.orow.total{border-top:1px dashed var(--line);margin-top:6px;padding-top:10px}
+.readybox{background:var(--good-bg);color:var(--good);font-weight:700;border-radius:12px;padding:12px 14px;margin:6px 0 8px}
+.orderrow{display:grid;grid-template-columns:auto 1fr auto;gap:2px 12px;align-items:center;width:100%;text-align:left;padding:12px 14px;border:1.5px solid var(--line);border-radius:14px;background:#fff;margin-top:8px}
+.orderrow:hover{border-color:var(--ink)}
+.orderrow .rt{font-family:var(--head);font-size:22px;grid-row:span 2}
+.orderrow .rs{font-size:13px;color:var(--muted)}
+.orderrow .rp{font-weight:700;justify-self:end}
+.tag{display:inline-block;font-size:12px;font-weight:700;padding:3px 9px;border-radius:99px}
+.tag.preparing{background:var(--warn-bg);color:var(--warn)}
+.tag.ready{background:var(--good-bg);color:var(--good)}
+.tag.collected{background:#E6E0D2;color:#4C473D}
+.tag.gold{background:var(--gold);color:var(--ink)}
+.tag.late{background:var(--bad-bg);color:var(--bad)}
+
+/* toast, banner, flash */
+#toast{position:fixed;right:18px;bottom:18px;z-index:40;width:min(320px,calc(100vw - 36px));background:var(--gold);color:var(--ink);border:1.5px solid var(--ink);border-radius:18px;padding:14px 16px;
+  box-shadow:5px 5px 0 var(--ink);transform:translateY(160%);visibility:hidden;transition:transform .35s cubic-bezier(.2,1.2,.4,1),visibility 0s .35s}
+#toast.on{transform:none;visibility:visible;transition-delay:0s}
+#toast .tt{font-family:var(--head);font-weight:800;font-size:19px;padding-right:34px}
+#toast .ts{font-size:13px;margin:2px 0 10px}
+#toast .x{position:absolute;top:2px;right:2px;width:44px;height:44px;font-size:22px;line-height:1}
+#banner{position:fixed;left:50%;top:12px;transform:translateX(-50%);z-index:70;width:min(460px,calc(100vw - 24px));display:flex;gap:10px;align-items:center;justify-content:space-between;
+  background:var(--good);color:#fff;border-radius:16px;padding:12px 14px;box-shadow:0 14px 40px -10px rgba(0,0,0,.5);font-weight:700}
+#banner .bb{display:flex;gap:6px;flex:none}
+#banner button{min-height:44px;padding:0 14px;border-radius:12px;background:#fff;color:var(--ink);font-weight:700}
+#flash{position:fixed;left:50%;bottom:90px;transform:translate(-50%,30px);opacity:0;pointer-events:none;background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;font-weight:500;z-index:80;transition:.25s;max-width:calc(100vw - 30px);text-align:center}
+#flash.on{opacity:1;transform:translate(-50%,0)}
+
+/* footer */
+.foot{max-width:1180px;margin:0 auto;padding:10px clamp(14px,3vw,32px) 110px;font-size:12.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center}
+
+/* manager */
+.mgr{max-width:1180px;margin:0 auto;padding:22px clamp(14px,3vw,32px) 20px}
+.mgr h1{font-size:clamp(26px,4vw,38px);font-weight:800;line-height:1.05}
+.mgr h2{font-size:22px;margin:26px 0 10px}
+.mgr .sub{color:var(--muted);margin-top:6px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:16px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column}
+.stat b{font-family:var(--head);font-size:28px;line-height:1.1}
+.stat span{font-size:12.5px;color:var(--muted)}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.mo{background:var(--card);border:1.5px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:8px}
+.mo.prem{border-color:var(--ink);box-shadow:4px 4px 0 var(--gold)}
+.mo-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.mtok{font-family:var(--head);font-size:28px;font-weight:800;line-height:1}
+.mo ul{list-style:none;padding:0;font-size:14px;display:flex;flex-direction:column;gap:2px}
+.mo-m{font-size:12.5px;color:var(--muted)}
+.mo .btn{margin-top:4px}
+.none{color:var(--muted);background:var(--card);border:1px dashed var(--line);border-radius:14px;padding:18px}
+.stock{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}
+.sw{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-height:52px;cursor:pointer;margin:0}
+.sw:has(input:focus-visible){outline:3px solid var(--focus);outline-offset:2px}
+.sw input{width:22px;height:22px;accent-color:var(--good);flex:none}
+.sw span{flex:1;font-size:14px}
+.sw small{color:var(--muted)}
+.sw em{font-style:normal;font-size:12px;font-weight:700;color:var(--good)}
+.sw.out em{color:var(--bad)}
+.sw.out{background:#EFE9DA}
+
+/* mobile */
+@media (max-width:900px){
+  .layout{grid-template-columns:1fr}
+  .cart{position:fixed;left:0;right:0;bottom:0;top:auto;z-index:45;border-radius:22px 22px 0 0;border-width:1.5px 0 0;box-shadow:0 -14px 40px -10px rgba(0,0,0,.4);
+    transform:translateY(105%);visibility:hidden;transition:transform .3s ease,visibility 0s .3s;max-height:82vh;overflow:auto;padding-bottom:max(18px,env(safe-area-inset-bottom))}
+  .cart.open{transform:none;visibility:visible;transition-delay:0s}
+  .mob{display:grid;place-items:center;width:44px;height:44px;font-size:26px;line-height:1}
+  .cartbar{position:fixed;left:12px;right:12px;bottom:max(12px,env(safe-area-inset-bottom));z-index:30;display:none;justify-content:space-between;align-items:center;text-align:left;
+    background:var(--ink);color:#fff;border-radius:16px;padding:13px 16px;font-weight:700;box-shadow:0 10px 30px -8px rgba(0,0,0,.5)}
+  .cartbar.on{display:flex}
+  .cartbar small{display:block;font-weight:500;opacity:.85;font-size:12px}
+  #toast{bottom:84px;right:12px}
+  .grid{grid-template-columns:repeat(2,1fr);gap:10px}
+  .ctop{flex-direction:column;align-items:flex-start;gap:8px}
+  .clock .lbl{display:none}
+  .sheet{padding:22px}
+}
+.sm{display:none}
+@media (max-width:480px){
+  .top{gap:6px 8px;padding-inline:12px}
+  .hacts{gap:6px}
+  .hbtn{padding:0 10px;font-size:13px}
+  .clock{padding:8px 11px}
+  .lg{display:none}
+  .sm{display:inline}
+  .tag.mgr{display:none}
+}
+@media (max-width:440px){
+  .brand{font-size:19px;gap:6px}
+  .brand svg{width:22px;height:22px}
+}
+@media (max-width:380px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <a class="skip" href="#main">Skip to menu</a>
+  <header class="top" id="topbar"></header>
+
+  <main id="main" class="wrap" tabindex="-1">
+    <section class="hero">
+      <h1 id="heroT">Food before the bell.</h1>
+      <p id="heroP">Tell us your budget and your break. We sort the canteen by what you can actually eat in time.</p>
+    </section>
+
+    <div class="bar" id="bar">
+      <button type="button" class="pill" data-act="editGate" id="budgetPill"></button>
+      <div class="seg" id="seg" role="group" aria-label="Sort menu by">
+        <button type="button" data-act="sort" data-v="match" aria-pressed="true">Best match</button>
+        <button type="button" data-act="sort" data-v="price" aria-pressed="false">Price</button>
+        <button type="button" data-act="sort" data-v="rating" aria-pressed="false">Rating</button>
+        <button type="button" data-act="sort" data-v="time" aria-pressed="false">Fastest to make</button>
+      </div>
+    </div>
+    <div class="queue" id="queue"></div>
+
+    <div class="layout">
+      <div>
+        <h2 class="sr">Menu</h2>
+        <div id="pick"></div>
+        <div class="grid" id="grid"></div>
+        <p class="hiddennote" id="hiddenNote"></p>
+      </div>
+      <aside class="cart" id="cart" aria-label="Your cart"></aside>
+    </div>
+  </main>
+
+  <main id="manager" class="mgr" aria-label="Canteen manager" hidden></main>
+
+  <footer class="foot">
+    <span>Prototype. Payments, queue size and orders are simulated and stored only in this browser.</span>
+    <button type="button" class="link" data-act="manage" id="manageLink">Canteen staff? Manage</button>
+  </footer>
+
+  <button type="button" class="cartbar" id="cartbar" data-act="toggleCart" aria-controls="cart" aria-expanded="false"></button>
+</div>
+
+<div id="banner" role="alert" hidden></div>
+<div id="toast"></div>
+<div id="flash" role="status" aria-live="polite"></div>
+<div id="announce" class="sr" aria-live="polite"></div>
+<div id="modal"></div>
+
+<script>
+(()=>{'use strict';
+/* =====================================================================
+   BellBites prototype. Everything runs in the browser; "server" data
+   (orders, sold-out items) lives in localStorage so the student page and
+   the manager page can talk to each other in the same browser.
+   ===================================================================== */
+
+/* ---------- data ---------- */
+const MENU=[
+ {id:1, name:'Masala Chai',        price:10, rate:4.7, prep:2, type:'drink', icon:'☕', tint:'#F6E3C8'},
+ {id:2, name:'Veg Puff',           price:15, rate:4.1, prep:1, type:'food',  icon:'🥐', tint:'#F9E2B5'},
+ {id:3, name:'Fresh Lime Water',   price:15, rate:4.0, prep:1, type:'drink', icon:'🍋', tint:'#F3F0B3'},
+ {id:4, name:'Samosa (2 pc)',      price:20, rate:4.4, prep:2, type:'food',  icon:'🥟', tint:'#F5D9B8'},
+ {id:5, name:'Poha',               price:20, rate:4.0, prep:3, type:'food',  icon:'🥣', tint:'#F8E8A8'},
+ {id:6, name:'Mango Frooti',       price:20, rate:4.0, prep:0, type:'drink', icon:'🧃', tint:'#FBD9A0'},
+ {id:7, name:'Lemon Soda',         price:20, rate:4.1, prep:1, type:'drink', icon:'🥤', tint:'#D5EFC6'},
+ {id:8, name:'Idli (2 pc)',        price:25, rate:4.3, prep:3, type:'food',  icon:'🍙', tint:'#ECE9E0'},
+ {id:9, name:'Bread Omelette',     price:30, rate:4.2, prep:5, type:'food',  icon:'🍳', tint:'#FBE7A1'},
+ {id:10,name:'Veg Maggi',          price:30, rate:4.5, prep:6, type:'food',  icon:'🍜', tint:'#F9DDA4'},
+ {id:11,name:'Fruit Bowl',         price:30, rate:4.2, prep:2, type:'food',  icon:'🍉', tint:'#FAD0CB'},
+ {id:12,name:'Cold Coffee',        price:35, rate:4.5, prep:3, type:'drink', icon:'🧋', tint:'#E6D3BF'},
+ {id:13,name:'Veg Sandwich',       price:35, rate:4.0, prep:4, type:'food',  icon:'🥪', tint:'#E2EDC4'},
+ {id:14,name:'Veg Burger',         price:35, rate:3.8, prep:4, type:'food',  icon:'🍔', tint:'#F5D3B0'},
+ {id:15,name:'Veg Roll',           price:35, rate:4.1, prep:5, type:'food',  icon:'🌯', tint:'#EAD9B7'},
+ {id:16,name:'Masala Dosa',        price:40, rate:4.6, prep:7, type:'food',  icon:'🥞', tint:'#F6DDAA'},
+ {id:17,name:'French Fries',       price:40, rate:4.2, prep:5, type:'food',  icon:'🍟', tint:'#FBE29A'},
+ {id:18,name:'Egg Maggi',          price:40, rate:4.3, prep:7, type:'food',  icon:'🍜', tint:'#F7D6A0'},
+ {id:19,name:'Grilled Cheese Sandwich',price:45,rate:4.4,prep:6,type:'food', icon:'🧀', tint:'#FBE08B'},
+ {id:20,name:'Chole Bhature',      price:50, rate:4.6, prep:8, type:'food',  icon:'🫓', tint:'#F3D1A6'},
+ {id:21,name:'Paneer Roll',        price:50, rate:4.4, prep:7, type:'food',  icon:'🌯', tint:'#F4D7BE'},
+ {id:22,name:'Veg Fried Rice',     price:55, rate:3.9, prep:9, type:'food',  icon:'🍚', tint:'#EEE6C8'}
+];
+const byId=Object.fromEntries(MENU.map(i=>[i.id,i]));
+const EAT=3, MAXQ=5, MAX_ORDERS=60, PREMIUM_DAYS=30, SAFE=Number.MAX_SAFE_INTEGER;
+const STATUS_LABEL={preparing:'Being prepared',ready:'Ready',collected:'Collected'};
+const DEMO_ADMIN={u:'admin',p:'123456'}; // PROTOTYPE ONLY. Visible in page source. A real version needs server-side login.
+const BASE_TITLE='BellBites - food before the bell';
+
+/* ---------- tiny helpers ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const int=(v,min,max,d)=>{v=Number(v);return Number.isFinite(v)?Math.min(max,Math.max(min,Math.floor(v))):d};
+const rand=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const mmss=ms=>{const s=Math.max(0,Math.ceil(ms/1000));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')};
+const fmtT=ms=>new Date(ms).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+const plural=(n,w)=>n+' '+w+(n===1?'':'s');
+
+/* ---------- storage (survives refresh; falls back to memory if blocked) ---------- */
+const mem={};
+const store={
+  get(k,area='localStorage'){try{const v=window[area].getItem(k);return v==null?null:JSON.parse(v)}catch(e){return k in mem?mem[k]:null}},
+  set(k,v,area='localStorage'){mem[k]=v;try{window[area].setItem(k,JSON.stringify(v))}catch(e){}}
+};
+const K_STU='bb.student.v1', K_CAN='bb.canteen.v1', K_ADM='bb.admin.v1';
+
+/* ---------- state ---------- */
+// Student (this phone/browser)
+const S={budget:60,spent:0,deadline:0,started:false,premiumUntil:0,sort:'match',cart:{},alerts:true,myOrders:[],seen:{}};
+// Canteen (shared with the manager page): orders and sold-out items
+let C={seq:100,orders:[],soldOut:[]};
+let view='student';          // 'student' | 'manager'
+let adm={in:false,view:'student'};
+let openOrderId=null, modalClosable=true, lastFocus=null, bannerOrders=[];
+const T={toast:0,hide:0};
+const lock={fails:0,until:0};
+
+function loadStudent(){
+  const o=store.get(K_STU); if(!o||typeof o!=='object')return;
+  S.budget=int(o.budget,10,500,60);
+  S.spent=int(o.spent,0,100000,0);
+  S.deadline=int(o.deadline,0,SAFE,0);
+  S.started=!!o.started&&S.deadline>0;
+  S.premiumUntil=int(o.premiumUntil,0,SAFE,0);
+  S.sort=['match','price','rating','time'].includes(o.sort)?o.sort:'match';
+  S.alerts=o.alerts!==false;
+  S.cart={};
+  if(o.cart&&typeof o.cart==='object')for(const k of Object.keys(o.cart)){const id=Number(k),q=int(o.cart[k],0,MAXQ,0);if(byId[id]&&q)S.cart[id]=q}
+  S.myOrders=Array.isArray(o.myOrders)?o.myOrders.map(Number).filter(n=>Number.isInteger(n)&&n>0).slice(-50):[];
+  S.seen={};
+  if(o.seen&&typeof o.seen==='object')for(const k of Object.keys(o.seen))if(['preparing','ready','collected'].includes(o.seen[k]))S.seen[Number(k)]=o.seen[k];
+}
+const saveStudent=()=>store.set(K_STU,S);
+
+function cleanOrder(r){
+  if(!r||typeof r!=='object'||!Array.isArray(r.items))return null;
+  const items=[];
+  for(const it of r.items){if(!Array.isArray(it))continue;const id=Number(it[0]),q=int(it[1],0,MAXQ,0);if(byId[id]&&q)items.push([id,q])}
+  const id=int(r.id,0,1e9,0);
+  if(!items.length||!id)return null;
+  const premium=!!r.premium;
+  return {id,token:(premium?'P-':'B-')+id,items,
+    total:items.reduce((a,[i,q])=>a+byId[i].price*q,0),       // always recomputed from the menu
+    pm:r.pm==='counter'?'counter':'upi',premium,
+    placedAt:int(r.placedAt,0,SAFE,0),etaAt:int(r.etaAt,0,SAFE,0),
+    status:['preparing','ready','collected'].includes(r.status)?r.status:'preparing'};
+}
+function loadCanteen(){
+  const c={seq:100,orders:[],soldOut:[]};
+  const o=store.get(K_CAN);
+  if(o&&typeof o==='object'){
+    c.seq=int(o.seq,100,1e9,100);
+    if(Array.isArray(o.soldOut))c.soldOut=[...new Set(o.soldOut.map(Number).filter(i=>byId[i]))];
+    if(Array.isArray(o.orders))for(const r of o.orders.slice(-MAX_ORDERS)){const q=cleanOrder(r);if(q){c.orders.push(q);c.seq=Math.max(c.seq,q.id)}}
+  }
+  return c;
+}
+function saveCanteen(){
+  while(C.orders.length>MAX_ORDERS){const i=C.orders.findIndex(o=>o.status==='collected');C.orders.splice(i<0?0:i,1)}
+  store.set(K_CAN,C);
+}
+
+/* ---------- queue and time (driven by real pending orders) ---------- */
+const walkIn=()=>11+Math.round(3*Math.sin(Date.now()/240000));        // simulated walk-in line, 8 to 14 min
+function pending(){let r=0,p=0;for(const o of C.orders)if(o.status==='preparing'){o.premium?p++:r++}return{r,p}}
+const waitReg=()=>{const{r,p}=pending();return walkIn()+Math.ceil(r*1.5+p)};   // premium orders go first, so they count ahead of you
+const waitPrem=()=>1+pending().p;
+const isPremium=()=>S.premiumUntil>Date.now();
+const lead=()=>isPremium()?waitPrem():waitReg();
+const remaining=()=>Math.max(0,S.budget-S.spent);
+const leftMin=()=>S.started?Math.max(0,(S.deadline-Date.now())/60000):0;
+const over=()=>S.started&&Date.now()>=S.deadline;
+const fits=(m,left=leftMin())=>m+EAT<=left;
+const isOut=id=>C.soldOut.includes(Number(id));
+const myActive=()=>C.orders.filter(o=>S.myOrders.includes(o.id)&&o.status!=='collected');
+
+function cartInfo(l=lead()){
+  let total=0,qty=0,mx=0;
+  for(const id in S.cart){const it=byId[id],q=S.cart[id];total+=it.price*q;qty+=q;mx=Math.max(mx,it.prep)}
+  const extra=Math.ceil(Math.max(0,qty-1)*0.5);
+  return {total,qty,mx,extra,queue:l,ready:qty?l+mx+extra:0};
+}
+
+/* ---------- rendering helpers (skip DOM work if nothing changed; keep keyboard focus) ---------- */
+function focusKey(el){
+  const a=document.activeElement;if(!a||!el.contains(a))return null;
+  const t=a.closest('[data-act]');return t?{act:t.dataset.act,id:t.dataset.id||'',v:t.dataset.v||''}:null;
+}
+function setHTML(el,html){
+  if(!el||el._h===html)return false;
+  const k=focusKey(el);
+  el._h=html;el.innerHTML=html;
+  if(k)for(const n of el.querySelectorAll('[data-act]'))if(n.dataset.act===k.act&&(n.dataset.id||'')===k.id&&(n.dataset.v||'')===k.v){n.focus();break}
+  return true;
+}
+const brk=(q,p)=>p?`${q} min queue + ${p} min to make`:`${q} min queue, no cooking`;
+
+/* ---------- student: menu ---------- */
+function decorate(){
+  const left=leftMin(),l=lead(),lp=waitPrem(),rem=remaining();
+  return MENU.filter(i=>i.price<=rem).map(i=>{
+    const r=l+i.prep,rp=lp+i.prep;
+    return {...i,l,lp,r,rp,out:isOut(i.id),ok:fits(r,left),okP:fits(rp,left)};
+  });
+}
+function sortItems(a){
+  const s=S.sort;
+  return a.sort((x,y)=>{
+    if(x.out!==y.out)return x.out?1:-1;
+    if(s==='price')return x.price-y.price||y.rate-x.rate;
+    if(s==='rating')return y.rate-x.rate||x.price-y.price;
+    if(s==='time')return x.prep-y.prep||y.rate-x.rate;
+    return (y.ok-x.ok)||(y.okP-x.okP)||(y.rate-x.rate)||(x.price-y.price);
+  });
+}
+function renderMenu(){
+  if(over()){setHTML($('#grid'),'');setHTML($('#hiddenNote'),'');return}
+  const items=sortItems(decorate());
+  const prem=isPremium();
+  const html=items.map(i=>{
+    const q=S.cart[i.id]||0;
+    let st;
+    if(i.out) st=`<span class="st out"><b>Sold out</b><small>Back when the canteen restocks</small></span>`;
+    else if(i.ok) st=`<span class="st ok"><b>Makes it · ready in ${i.r} min</b><small>${brk(i.l,i.prep)}</small></span>`;
+    else if(!prem&&i.okP) st=`<button type="button" class="st pm" data-act="premium"><b>⚡ Premium makes it · ${i.rp} min</b><small>${brk(i.lp,i.prep)}. Tap to see Premium</small></button>`;
+    else st=`<span class="st no"><b>Too slow · ${i.r} min</b><small>${brk(i.l,i.prep)}</small></span>`;
+    const ctl=i.out?`<button type="button" class="add" disabled>Sold out</button>`
+      :q?`<div class="step"><button type="button" data-act="dec" data-id="${i.id}" aria-label="Remove one ${esc(i.name)}">−</button><span aria-live="polite">${q}</span><button type="button" data-act="inc" data-id="${i.id}" aria-label="Add one ${esc(i.name)}">+</button></div>`
+        :`<button type="button" class="add" data-act="inc" data-id="${i.id}" aria-label="Add ${esc(i.name)}, ₹${i.price}">Add</button>`;
+    return `<article class="card ${i.ok&&!i.out?'':'slow'}">
+      <div class="ctop"><div class="ico" style="--t:${esc(i.tint)}" aria-hidden="true">${esc(i.icon)}</div>
+        <div><h3>${esc(i.name)}</h3><div class="meta"><span class="star"><span class="sr">Rated </span>★ ${i.rate.toFixed(1)}</span><span>${i.prep===0?'Grab &amp; go':i.prep+' min to make'}</span></div></div></div>
+      ${st}
+      <div class="cfoot"><span class="price">₹${i.price}</span>${ctl}</div></article>`;
+  }).join('');
+  setHTML($('#grid'),html);
+  const hidden=MENU.length-items.length;
+  setHTML($('#hiddenNote'),hidden?`${plural(hidden,'item')} above your ₹${remaining()} left ${hidden>1?'are':'is'} hidden. <button type="button" class="link" data-act="editGate">Change budget</button>`:'');
+}
+function renderPick(){
+  const el=$('#pick');
+  if(over()){
+    setHTML(el,`<div class="pick"><div><div class="k">Class has started</div><div class="t">Your break is over.</div><div class="s">Set your next break to see what you can eat in time.</div></div>
+      <button type="button" class="btn sm" data-act="editGate">Set next break</button></div>`);return;
+  }
+  const d=decorate();
+  const prem=isPremium();
+  const good=d.filter(i=>!i.out&&(prem?i.ok:i.ok)).sort((a,b)=>b.rate-a.rate||a.price-b.price);
+  const food=good.find(i=>i.type==='food');
+  let combo=[];
+  if(food){combo=[food];const dr=good.find(i=>i.type==='drink'&&i.price<=remaining()-food.price);if(dr)combo.push(dr)}
+  else if(good.length)combo=[good[0]];
+  if(!d.length){
+    setHTML(el,`<div class="pick"><div><div class="k">Heads up</div><div class="t">Your budget is used up.</div><div class="s">You have ₹${remaining()} left. The cheapest item is ₹${MENU[0].price}.</div></div>
+      <button type="button" class="btn sm" data-act="editGate">Change budget</button></div>`);
+  }else if(combo.length){
+    const total=combo.reduce((a,b)=>a+b.price,0),ready=Math.max(...combo.map(i=>i.r));
+    setHTML(el,`<div class="pick"><div><div class="k">Smart pick</div><div class="t">${combo.map(i=>esc(i.icon+' '+i.name)).join(' + ')}</div>
+      <div class="s">₹${total} · ready in ${ready} min · best rated that fits your time and budget</div></div>
+      <button type="button" class="btn sm" data-act="pickAdd" data-ids="${combo.map(i=>i.id).join(',')}">Add pick</button></div>`);
+  }else if(!prem){
+    setHTML(el,`<div class="pick"><div><div class="k">Heads up</div><div class="t">The queue is longer than your break.</div>
+      <div class="s">Priority lane brings the wait down to about ${waitPrem()} min.</div></div>
+      <button type="button" class="btn sm" data-act="premium">Skip the queue</button></div>`);
+  }else{
+    setHTML(el,`<div class="pick"><div><div class="k">Heads up</div><div class="t">Not enough time for a proper meal.</div><div class="s">Try a grab-and-go item.</div></div></div>`);
+  }
+}
+function renderQueue(){
+  const {r,p}=pending(),ahead=r+p;
+  const a=`<span><span class="dot" aria-hidden="true"></span>Normal queue <b>≈ ${waitReg()} min</b></span><span>${plural(ahead,'order')} in the kitchen</span>`;
+  const b=isPremium()?`<span>You're in the priority lane: <b>≈ ${waitPrem()} min</b></span>`:`<span>Priority lane: <b>≈ ${waitPrem()} min</b> with Premium</span>`;
+  setHTML($('#queue'),a+b);
+}
+function renderCart(){
+  const c=cartInfo(),left=leftMin(),rem=remaining();
+  let h=`<div class="cart-h"><h2>Your cart</h2><button type="button" class="mob" data-act="toggleCart" aria-label="Close cart">×</button></div>`;
+  if(!c.qty){
+    h+=`<p class="empty">Nothing yet. Add something and we'll tell you if you'll be back before the bell.</p>`;
+  }else{
+    h+='<ul class="lines">'+Object.keys(S.cart).map(id=>{
+      const it=byId[id],q=S.cart[id];
+      return `<li><span class="n"><span><span aria-hidden="true">${esc(it.icon)}</span> ${esc(it.name)}</span><small>₹${it.price} each</small></span>
+        <span class="step"><button type="button" data-act="dec" data-id="${id}" aria-label="Remove one ${esc(it.name)}">−</button><span>${q}</span><button type="button" data-act="inc" data-id="${id}" aria-label="Add one ${esc(it.name)}">+</button></span></li>`;
+    }).join('')+'</ul>';
+    h+=`<div class="sum"><div>Total<b>₹${c.total}</b></div><div>Left after<b>₹${rem-c.total}</b></div><div>Ready in<b>${c.ready} min</b></div></div>
+      <div class="brk">${c.queue} min queue + ${c.mx} min cooking${c.extra?` + ${c.extra} for extra items`:''}</div>`;
+    if(over()){
+      h+=`<div class="verdict bad">Class has started. Set your next break to order.</div><button type="button" class="btn primary" disabled>Checkout · ₹${c.total}</button>`;
+    }else{
+      if(fits(c.ready,left)){
+        h+=`<div class="verdict good">You'll make it. About ${Math.floor(left-c.ready)} min to eat before class.</div>`;
+      }else{
+        const late=Math.ceil(c.ready+EAT-left);
+        const pOk=!isPremium()&&fits(cartInfo(waitPrem()).ready,left);
+        h+=`<div class="verdict bad">Too slow by about ${late} min.${pOk?`<button type="button" data-act="premium">Priority lane would fix this</button>`:' Try removing the slowest item.'}</div>`;
+      }
+      h+=`<button type="button" class="btn primary" data-act="checkout">Checkout · ₹${c.total}</button>`;
+    }
+  }
+  setHTML($('#cart'),h);
+  const bar=$('#cartbar');
+  bar.classList.toggle('on',c.qty>0&&view==='student');
+  setHTML(bar,`<span>${plural(c.qty,'item')} · ₹${c.total}<small>Ready in ${c.ready} min</small></span><span>View cart →</span>`);
+}
+function renderHero(){
+  const m=Math.floor(leftMin());
+  const rem=remaining();
+  let t,p;
+  if(!S.started){t='Food before the bell.';p='Tell us your budget and your break. We sort the canteen by what you can actually eat in time.'}
+  else if(over()){t=`Break's <em>over</em>.`;p='Class has started. Set your next break to see what you can eat in time.'}
+  else{t=`You have <em>${m} min</em> and <em>₹${rem}</em>.`;p="Here's what you can eat and still make it to class."}
+  setHTML($('#heroT'),t);setHTML($('#heroP'),esc(p));
+  setHTML($('#budgetPill'),`₹${rem} left <small>of ₹${S.budget} · edit</small>`);
+  $('#bar').hidden=!S.started||over();
+  $('#queue').hidden=over();
+  for(const b of $('#seg').querySelectorAll('button'))b.setAttribute('aria-pressed',String(b.dataset.v===S.sort));
+}
+function renderHeader(){
+  const el=$('#topbar');
+  const prem=view==='student'&&isPremium();
+  let h=`<div class="brand"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span class="bn">BellBites</span>${prem?`<button type="button" class="prem-badge" data-act="premium" aria-label="Premium is active. View details">Premium</button>`:''}</div>`;
+  if(view==='manager'){
+    h+=`<div class="hacts"><span class="tag mgr">Canteen manager</span><button type="button" class="hbtn" data-act="studentView">Student view</button><button type="button" class="hbtn" data-act="logout">Log out</button></div>`;
+  }else{
+    const act=myActive().length;
+    h+=`<div class="hacts">
+      ${prem?'':`<button type="button" class="hbtn gold" data-act="premium" aria-label="Get Premium"><span aria-hidden="true">⚡</span> <span class="lg">Get </span>Premium</button>`}
+      ${S.myOrders.length?`<button type="button" class="hbtn" data-act="orders"><span class="lg">My orders</span><span class="sm">Orders</span>${act?` <span class="cnt" aria-label="${act} active">${act}</span>`:''}</button>`:''}
+      <div id="clock" class="clock"><span class="lbl">Next class in</span><b id="clockT">--:--</b></div></div>`;
+  }
+  if(setHTML(el,h))tick();
+}
+
+/* ---------- manager ---------- */
+function renderManager(){
+  const act=C.orders.filter(o=>o.status!=='collected').sort((a,b)=>(b.premium-a.premium)||a.placedAt-b.placedAt);
+  const done=C.orders.filter(o=>o.status==='collected').sort((a,b)=>b.placedAt-a.placedAt).slice(0,12);
+  const {r,p}=pending();
+  const ready=C.orders.filter(o=>o.status==='ready').length;
+  const now=Date.now();
+  const card=o=>{
+    const items=o.items.map(([i,q])=>`<li>${esc(byId[i].icon)} ${esc(byId[i].name)} × ${q}</li>`).join('');
+    const late=o.status==='preparing'&&o.etaAt<now;
+    const pay=o.pm==='upi'?'Paid by UPI (demo)':(o.status==='collected'?'Paid at counter':`Collect ₹${o.total} at counter`);
+    let btn='';
+    if(o.status==='preparing')btn=`<button type="button" class="btn dark" data-act="mReady" data-id="${o.id}">Mark ready</button>`;
+    else if(o.status==='ready')btn=`<button type="button" class="btn primary" data-act="mCollect" data-id="${o.id}">${o.pm==='counter'?'Collected + payment received':'Collected'}</button>`;
+    return `<article class="mo ${o.premium?'prem':''}" aria-label="Order ${o.token}">
+      <div class="mo-h"><span class="mtok">${o.token}</span>${o.premium?'<span class="tag gold">Premium</span>':''}<span class="tag ${o.status}">${STATUS_LABEL[o.status]}</span>${late?'<span class="tag late">Overdue</span>':''}</div>
+      <ul>${items}</ul>
+      <div class="mo-m">₹${o.total} · ${pay}<br>Placed ${fmtT(o.placedAt)}${o.status==='collected'?'':` · Promised ${fmtT(o.etaAt)}`}</div>${btn}</article>`;
+  };
+  const stock=MENU.map(i=>{const out=isOut(i.id);
+    return `<label class="sw ${out?'out':''}"><input type="checkbox" role="switch" data-act="stock" data-id="${i.id}" ${out?'':'checked'}><span><span aria-hidden="true">${esc(i.icon)}</span> ${esc(i.name)} <small>₹${i.price}</small></span><em>${out?'Sold out':'In stock'}</em></label>`}).join('');
+  const h=`<h1>Canteen orders</h1><p class="sub">Live orders from students. Premium orders are shown first and get the shorter queue.</p>
+    <div class="stats">
+      <div class="stat"><b>${r+p}</b><span>Waiting in kitchen</span></div>
+      <div class="stat"><b>${ready}</b><span>Ready to collect</span></div>
+      <div class="stat"><b>${p}</b><span>Premium waiting</span></div>
+      <div class="stat"><b>≈ ${waitReg()} min</b><span>Normal queue wait</span></div>
+      <div class="stat"><b>≈ ${waitPrem()} min</b><span>Priority wait</span></div>
+    </div>
+    <h2>Active orders</h2>
+    ${act.length?`<div class="mgrid">${act.map(card).join('')}</div>`:'<p class="none">No active orders. New orders from the student page appear here by themselves.</p>'}
+    <h2>Menu stock</h2><p class="sub" style="margin:-4px 0 10px">Switch an item off when it runs out. Students see "Sold out" straight away.</p>
+    <div class="stock">${stock}</div>
+    <h2>Collected recently</h2>
+    ${done.length?`<div class="mgrid">${done.map(card).join('')}</div>`:'<p class="none">Nothing collected yet.</p>'}
+    <p style="margin-top:24px"><button type="button" class="btn line small" data-act="resetAsk">Reset demo data</button></p>`;
+  setHTML($('#manager'),h);
+}
+
+/* ---------- modals (focus trap, inert background, Escape) ---------- */
+const sheetEl=()=>document.querySelector('#modal .sheet');
+const modalOpen=()=>$('#modal').classList.contains('on');
+function openModal(html,{closable=true}={}){
+  const m=$('#modal');
+  if(!modalOpen())lastFocus=document.activeElement;
+  modalClosable=closable;
+  m.innerHTML=`<div class="scrim" ${closable?'data-act="close"':''}></div><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="mTitle">${html}</div>`;
+  m.classList.add('on');
+  const app=$('#app');app.inert=true;app.setAttribute('aria-hidden','true');
+  hideToast();
+  const s=sheetEl();
+  const f=s.querySelector('[data-autofocus]')||focusables(s)[0];
+  (f||s).focus();
+}
+function closeModal(){
+  const m=$('#modal');if(!modalOpen())return;
+  m.classList.remove('on');m.innerHTML='';openOrderId=null;
+  const app=$('#app');app.inert=false;app.removeAttribute('aria-hidden');
+  if(lastFocus&&document.contains(lastFocus)&&!lastFocus.closest('[hidden]'))lastFocus.focus();
+  lastFocus=null;
+}
+function focusables(root){
+  return [...root.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),select,textarea,[tabindex]:not([tabindex="-1"])')].filter(e=>!e.closest('[hidden]'));
+}
+function flash(msg){const f=$('#flash');f.textContent=msg;f.classList.add('on');clearTimeout(flash.t);flash.t=setTimeout(()=>f.classList.remove('on'),2600)}
+const announce=msg=>{const a=$('#announce');a.textContent='';setTimeout(()=>{a.textContent=msg},50)};
+
+/* ---------- toast nudge ---------- */
+function hideToast(){$('#toast').classList.remove('on');clearTimeout(T.hide)}
+const TOASTS=[['Want food fast?','Skip the canteen queue for ₹99/month.'],['Queue too long?','Priority lane gets you served first.'],['Short on time?','Premium cuts the wait to a couple of minutes.']];
+function scheduleToast(sec){clearTimeout(T.toast);if(isPremium())return;T.toast=setTimeout(showToast,sec*1000)}
+function showToast(){
+  if(isPremium()||!S.started||over()||view!=='student'||modalOpen())return scheduleToast(rand(20,30));
+  const [t,s]=TOASTS[rand(0,TOASTS.length-1)];
+  $('#toast').innerHTML=`<button type="button" class="x" data-act="toastX" aria-label="Dismiss">×</button><div class="tt"><span aria-hidden="true">⚡</span> ${t}</div><div class="ts">${s}</div><button type="button" class="btn sm" style="background:var(--ink);color:#fff" data-act="premium">Skip the queue</button>`;
+  $('#toast').classList.add('on');
+  clearTimeout(T.hide);T.hide=setTimeout(()=>{hideToast();scheduleToast(rand(35,60))},12000);
+}
+
+/* ---------- screens ---------- */
+function gate(){
+  const editing=S.started;
+  const mins=editing&&!over()?Math.max(5,Math.round(leftMin())):20;
+  const minB=Math.max(10,S.spent);
+  openModal(`<h2 id="mTitle">${editing?'Update your break':'Before the bell rings'}</h2>
+    <p class="sub">${editing?'Change your total budget or restart the break timer.':'Two numbers, and we sort the canteen for you.'}</p>
+    <form id="gateForm" novalidate>
+    <label for="gB">Total budget for today (₹)</label>
+    <input id="gB" type="number" inputmode="numeric" min="${minB}" max="500" value="${S.budget}" data-autofocus>
+    ${S.spent?`<p class="hint">You've already spent ₹${S.spent}, so ₹${remaining()} is left now.</p>`:''}
+    <div class="chips" role="group" aria-label="Quick budget">${[20,30,40,60,80,100].map(v=>`<button type="button" data-act="setB" data-v="${v}">₹${v}</button>`).join('')}</div>
+    <label for="gM">Minutes until your next class</label>
+    <input id="gM" type="number" inputmode="numeric" min="5" max="90" value="${mins}">
+    <div class="chips" role="group" aria-label="Quick minutes">${[10,15,20,30,45].map(v=>`<button type="button" data-act="setM" data-v="${v}">${v} min</button>`).join('')}</div>
+    <button type="submit" class="btn primary big">${editing?'Save':'Show me food'}</button>
+    </form>`,{closable:S.started});
+}
+function premiumModal(){
+  if(isPremium()){
+    const d=new Date(S.premiumUntil).toLocaleDateString([],{day:'numeric',month:'short',year:'numeric'});
+    openModal(`<span class="ribbon good">Active</span><h2 id="mTitle">BellBites Premium</h2>
+      <p class="sub">Your priority lane is on until ${esc(d)}.</p>
+      <ul class="perks"><li>Queue wait about ${waitPrem()} min instead of ${waitReg()} min</li><li>Premium orders are made first</li></ul>
+      <button type="button" class="btn dark big" data-act="close" data-autofocus>Close</button>`);
+    return;
+  }
+  openModal(`<span class="ribbon">First-time price</span><h2 id="mTitle">BellBites Premium</h2>
+    <div class="pr"><b>₹99</b><s><span class="sr">was </span>₹249</s><span>/ month</span></div>
+    <ul class="perks"><li>Priority lane: queue wait drops from about ${waitReg()} min to about ${waitPrem()} min</li><li>See which items you can only make in time with Premium</li><li>Valid for ${PREMIUM_DAYS} days. Cancel anytime</li></ul>
+    <button type="button" class="btn gold big" data-act="subscribe" data-autofocus>Pay ₹99 with UPI (demo)</button>
+    <button type="button" class="btn ghost" data-act="close">Not now</button>
+    <p class="fine">Demo only. No real payment is taken.</p>`);
+}
+function checkoutModal(){
+  const c=cartInfo();
+  openModal(`<h2 id="mTitle">Checkout</h2><p class="sub">${plural(c.qty,'item')} · ready in about ${c.ready} min</p>
+    ${Object.keys(S.cart).map(id=>`<div class="orow"><span><span aria-hidden="true">${esc(byId[id].icon)}</span> ${esc(byId[id].name)} × ${S.cart[id]}</span><b>₹${byId[id].price*S.cart[id]}</b></div>`).join('')}
+    <div class="orow total"><b>Total</b><b>₹${c.total}</b></div>
+    <form id="checkoutForm" novalidate>
+    <fieldset><legend>Pay with</legend>
+    <div class="pay">
+      <label class="opt"><input type="radio" name="pm" value="upi" checked><span><b>UPI</b><small>GPay, PhonePe, Paytm</small><div class="upi" id="upiWrap"><label for="upiId" class="sr">UPI ID</label><input type="text" id="upiId" placeholder="yourname@upi" value="demo@upi" maxlength="50" autocomplete="off" spellcheck="false"></div></span></label>
+      <label class="opt"><input type="radio" name="pm" value="counter"><span><b>Pay at counter</b><small>Pay when you collect your order.</small></span></label>
+    </div></fieldset>
+    <button type="submit" class="btn primary big">Place order</button>
+    <button type="button" class="btn ghost" data-act="close">Back</button>
+    </form>
+    <p class="fine">Demo only. No real payment is taken.</p>`);
+}
+const alertLabel=()=>`${S.alerts?'🔔':'🔕'} Sound and vibration: ${S.alerts?'on':'off'}`;
+const alertBtn=()=>`<button type="button" class="btn line small" data-act="alerts" aria-pressed="${S.alerts}" style="margin-top:12px">${alertLabel()}</button>`;
+function orderModal(id){
+  const o=C.orders.find(x=>x.id===id);
+  if(!o){closeModal();return}
+  const wasOpen=openOrderId===id&&modalOpen();
+  const items=o.items.map(([i,q])=>`<div class="orow"><span><span aria-hidden="true">${esc(byId[i].icon)}</span> ${esc(byId[i].name)} × ${q}</span><b>₹${byId[i].price*q}</b></div>`).join('');
+  let ribbon,status;
+  if(o.status==='preparing'){
+    ribbon=`<span class="ribbon">Being prepared</span>`;
+    status=`<div class="orow"><span>Ready in</span><span class="big-t" id="orderT" data-eta="${o.etaAt}">${o.etaAt>Date.now()?mmss(o.etaAt-Date.now()):'Any moment'}</span></div><div class="orow"><span>Ready around</span><b>${fmtT(o.etaAt)}</b></div>`;
+  }else if(o.status==='ready'){
+    ribbon=`<span class="ribbon good">Ready to collect</span>`;
+    status=`<p class="readybox">Your order is ready. Show this token at the ${o.premium?'priority lane':'counter'}.</p>`;
+  }else{
+    ribbon=`<span class="ribbon grey">Collected</span>`;status='';
+  }
+  const pay=o.pm==='upi'?'Paid by UPI (demo).':(o.status==='collected'?'Paid at the counter.':`Pay ₹${o.total} at the counter when you collect.`);
+  const html=`${ribbon}<h2 id="mTitle">Your token</h2><div class="token" aria-label="Token ${esc(o.token)}">${esc(o.token)}</div>
+    ${items}<div class="orow total"><b>Total</b><b>₹${o.total}</b></div>
+    <p class="sub" style="margin:8px 0">${pay}</p>${status}
+    ${o.status==='preparing'?alertBtn():''}
+    <button type="button" class="btn dark big" data-act="close" data-autofocus>Close</button>
+    ${S.myOrders.length>1?`<button type="button" class="btn ghost" data-act="orders">All my orders</button>`:''}
+    <p class="fine">You can find this token again under My orders.</p>`;
+  if(wasOpen){const s=sheetEl();if(s&&s._h!==html){const k=document.activeElement&&s.contains(document.activeElement);s._h=html;s.innerHTML=html;if(k)(s.querySelector('[data-autofocus]')||s).focus()}}
+  else{openModal(html);}
+  openOrderId=id;
+  const s=sheetEl();if(s)s._h=html;
+}
+function ordersModal(){
+  const list=C.orders.filter(o=>S.myOrders.includes(o.id)).sort((a,b)=>(a.status==='collected')-(b.status==='collected')||b.placedAt-a.placedAt);
+  openModal(`<h2 id="mTitle">My orders</h2><p class="sub">Show the token at the counter. It stays here until it's collected.</p>
+    ${alertBtn()}
+    ${list.length?list.map(o=>`<button type="button" class="orderrow" data-act="openOrder" data-id="${o.id}"><b class="rt">${esc(o.token)}</b><span class="rs">${o.items.map(([i,q])=>esc(byId[i].name)+' ×'+q).join(', ')}</span><span class="rp">₹${o.total}</span><span><span class="tag ${o.status}">${STATUS_LABEL[o.status]}</span></span></button>`).join(''):'<p class="none">No orders yet.</p>'}
+    <button type="button" class="btn ghost big" data-act="close" data-autofocus>Close</button>`);
+}
+function loginModal(){
+  openModal(`<h2 id="mTitle">Canteen manager</h2><p class="sub">Staff login to see orders and update stock.</p>
+    <form id="loginForm" novalidate>
+    <label for="lu">Username</label><input id="lu" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" data-autofocus>
+    <label for="lp">Password</label><input id="lp" type="password" autocomplete="off">
+    <p class="err" id="loginErr" role="alert"></p>
+    <div class="note">Prototype login: username <b>admin</b>, password <b>123456</b>. It sits in the page source, so it is not secure. A real version needs a server-side login with hashed passwords.</div>
+    <button type="submit" class="btn primary big">Log in</button>
+    <button type="button" class="btn ghost" data-act="close">Cancel</button>
+    </form>`);
+}
+function resetModal(){
+  openModal(`<h2 id="mTitle">Reset demo data?</h2><p class="sub">This clears every order and puts all items back in stock. Students' budgets and Premium stay as they are.</p>
+    <button type="button" class="btn primary big" data-act="resetGo">Yes, reset</button>
+    <button type="button" class="btn ghost" data-act="close" data-autofocus>Cancel</button>`);
+}
+
+/* ---------- order flow ---------- */
+function reconcile(){
+  const gone=[];
+  for(const id of Object.keys(S.cart))if(isOut(id)){gone.push(byId[id].name);delete S.cart[id]}
+  const before=S.myOrders.length;
+  S.myOrders=S.myOrders.filter(id=>C.orders.some(o=>o.id===id));
+  if(gone.length||before!==S.myOrders.length)saveStudent();
+  return gone;
+}
+function placeOrder(){
+  const c=cartInfo();
+  if(!c.qty||c.total>remaining()||over()){closeModal();return}
+  const gone=reconcile();
+  if(gone.length){closeModal();renderAll();flash(`${gone.join(', ')} just sold out and was removed from your cart`);return}
+  const sel=document.querySelector('input[name=pm]:checked');
+  const pm=sel&&sel.value==='counter'?'counter':'upi';
+  if(pm==='upi'&&!/^[a-zA-Z0-9._-]{2,40}@[a-zA-Z]{2,20}$/.test(($('#upiId')||{}).value||'')){flash('Enter a valid UPI ID, like name@upi');return}
+  const prem=isPremium(),id=++C.seq,now=Date.now();
+  const o={id,token:(prem?'P-':'B-')+id,items:Object.keys(S.cart).map(k=>[Number(k),S.cart[k]]),total:c.total,pm,premium:prem,placedAt:now,etaAt:now+c.ready*60000,status:'preparing'};
+  C.orders.push(o);saveCanteen();
+  S.spent+=c.total;S.cart={};S.myOrders.push(id);S.seen[id]='preparing';saveStudent();
+  orderModal(id);renderAll();
+}
+
+/* ---------- ready alerts ---------- */
+let ac=null;
+function unlockAudio(){try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume()}catch(e){}}
+function tone(freq,at){
+  try{if(!ac)return;const t=ac.currentTime+at,o=ac.createOscillator(),g=ac.createGain();
+    o.frequency.value=freq;o.connect(g);g.connect(ac.destination);
+    g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.25,t+.03);g.gain.exponentialRampToValueAtTime(.0001,t+.35);
+    o.start(t);o.stop(t+.4)}catch(e){}
+}
+function alertReady(list){
+  const names=list.map(o=>o.token).join(', ');
+  bannerOrders=list.map(o=>o.id);
+  const b=$('#banner');
+  b.innerHTML=`<span>Order ${esc(names)} is ready. Collect it now.</span><span class="bb"><button type="button" data-act="bannerView">View</button><button type="button" data-act="bannerX" aria-label="Dismiss">×</button></span>`;
+  b.hidden=false;
+  document.title='🔔 Order ready · BellBites';
+  if(S.alerts){try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch(e){};tone(880,0);tone(1175,.18)}
+}
+function clearBanner(){$('#banner').hidden=true;document.title=BASE_TITLE}
+function checkReady(){
+  if(view!=='student')return;
+  const newly=[];let changed=false;
+  for(const id of S.myOrders){
+    const o=C.orders.find(x=>x.id===id);if(!o)continue;
+    if(S.seen[id]!==o.status){if(o.status==='ready'&&S.seen[id]!=='ready')newly.push(o);S.seen[id]=o.status;changed=true}
+  }
+  if(changed)saveStudent();
+  if(newly.length)alertReady(newly);
+}
+
+/* ---------- main render ---------- */
+function renderAll(){
+  $('#main').hidden=view!=='student';
+  $('#manager').hidden=view!=='manager';
+  $('#manageLink').textContent=adm.in?'Back to manager':'Canteen staff? Manage';
+  $('#manageLink').hidden=view==='manager';
+  renderHeader();
+  if(view==='manager'){$('#cartbar').classList.remove('on');renderManager();return}
+  renderHero();renderQueue();renderPick();renderMenu();renderCart();
+}
+function setView(v){
+  view=v;adm.view=v;if(adm.in)store.set(K_ADM,adm,'sessionStorage');
+  hideToast();
+  if(v==='student'){const g=reconcile();checkReady();if(g)flash(`${g.join(', ')} just sold out and was removed from your cart`);if(S.started&&!over())scheduleToast(rand(15,25))}
+  renderAll();window.scrollTo(0,0);
+  const f=v==='manager'?$('#manager h1'):$('#heroT');if(f){f.setAttribute('tabindex','-1');f.focus({preventScroll:true})}
+}
+function onCanteenChange(){
+  const g=reconcile();
+  if(g.length&&view==='student')flash(`${g.join(', ')} just sold out and was removed from your cart`);
+  checkReady();renderAll();
+  if(openOrderId&&modalOpen())orderModal(openOrderId);
+}
+
+/* ---------- clock ---------- */
+let lastM=-1;const warned={};
+function tick(){
+  const now=Date.now();
+  const ms=S.started?Math.max(0,S.deadline-now):0;
+  const ct=$('#clockT'),c=$('#clock');
+  if(ct){
+    ct.textContent=!S.started?'--:--':(ms?mmss(ms):'Class started');
+    c.classList.toggle('warn',S.started&&ms>0&&ms<5*60000);
+  }
+  if(S.started){
+    for(const [thr,msg] of [[300000,'5 minutes until class'],[60000,'1 minute until class'],[0,'Class has started']]){
+      const key=S.deadline+':'+thr;
+      if(ms<=thr&&!warned[key]&&(thr===0||ms>0)&&(now-S.deadline<60000||thr>0)){warned[key]=1;if(view==='student')announce(msg)}
+    }
+    if(view==='student'){const m=Math.floor(ms/60000);const st=ms===0?-2:m;if(st!==lastM){lastM=st;renderAll()}}
+  }
+  if(S.premiumUntil&&S.premiumUntil<=now){S.premiumUntil=0;saveStudent();flash('Premium has ended');renderAll();scheduleToast(rand(15,25))}
+  const t=$('#orderT');if(t){const r=(+t.dataset.eta)-now;t.textContent=r>0?mmss(r):'Any moment'}
+}
+setInterval(tick,1000);
+setInterval(()=>{if(!modalOpen()||view==='manager')renderAll();else{renderHeader()}},10000);
+
+/* ---------- events ---------- */
+document.addEventListener('click',e=>{
+  unlockAudio();
+  const t=e.target.closest('[data-act]');if(!t)return;
+  const act=t.dataset.act,id=t.dataset.id;
+  switch(act){
+    case 'inc':{
+      const it=byId[id];if(!it)return;
+      if(over()){flash('Class has started. Set your next break first.');return}
+      if(isOut(id)){flash(it.name+' is sold out');return}
+      if((S.cart[id]||0)>=MAXQ){flash('Max '+MAXQ+' of one item');return}
+      const c=cartInfo();
+      if(c.total+it.price>remaining()){flash(`Over budget by ₹${c.total+it.price-remaining()}. You have ₹${remaining()} left.`);return}
+      S.cart[id]=(S.cart[id]||0)+1;saveStudent();renderAll();break}
+    case 'dec':if(!S.cart[id])return;S.cart[id]--;if(S.cart[id]<=0)delete S.cart[id];saveStudent();renderAll();break;
+    case 'pickAdd':
+      if(over())return;
+      t.dataset.ids.split(',').forEach(i=>{const it=byId[i];if(it&&!isOut(i)&&cartInfo().total+it.price<=remaining()&&(S.cart[i]||0)<MAXQ)S.cart[i]=(S.cart[i]||0)+1});
+      saveStudent();renderAll();flash('Pick added to your cart');break;
+    case 'sort':S.sort=['match','price','rating','time'].includes(t.dataset.v)?t.dataset.v:'match';saveStudent();renderAll();break;
+    case 'editGate':gate();break;
+    case 'setB':$('#gB').value=t.dataset.v;$('#gB').focus();break;
+    case 'setM':$('#gM').value=t.dataset.v;$('#gM').focus();break;
+    case 'premium':hideToast();premiumModal();break;
+    case 'toastX':hideToast();scheduleToast(rand(35,60));break;
+    case 'subscribe':
+      S.premiumUntil=Date.now()+PREMIUM_DAYS*864e5;saveStudent();clearTimeout(T.toast);closeModal();renderAll();flash('Premium on. Priority lane unlocked.');break;
+    case 'checkout':if(!cartInfo().qty||over())return;$('#cart').classList.remove('open');$('#cartbar').setAttribute('aria-expanded','false');checkoutModal();break;
+    case 'orders':ordersModal();break;
+    case 'openOrder':orderModal(Number(id));break;
+    case 'alerts':
+      S.alerts=!S.alerts;saveStudent();
+      document.querySelectorAll('[data-act=alerts]').forEach(n=>{n.textContent=alertLabel();n.setAttribute('aria-pressed',String(S.alerts))});
+      if(S.alerts)tone(660,0);
+      flash(S.alerts?'Sound and vibration on':'Sound and vibration off');break;
+    case 'bannerView':{const first=bannerOrders[0];clearBanner();if(first)orderModal(first);break}
+    case 'bannerX':clearBanner();break;
+    case 'toggleCart':{const c=$('#cart'),o=c.classList.toggle('open');$('#cartbar').setAttribute('aria-expanded',String(o));if(o){const f=focusables(c)[0];f&&f.focus()}else $('#cartbar').focus();break}
+    case 'close':closeModal();break;
+    case 'manage':if(adm.in)setView('manager');else loginModal();break;
+    case 'studentView':setView('student');break;
+    case 'logout':adm={in:false,view:'student'};store.set(K_ADM,adm,'sessionStorage');setView('student');flash('Logged out');break;
+    case 'mReady':{const o=C.orders.find(x=>x.id===Number(id));if(o&&o.status==='preparing'){o.status='ready';saveCanteen();renderAll()}break}
+    case 'mCollect':{const o=C.orders.find(x=>x.id===Number(id));if(o&&o.status==='ready'){o.status='collected';saveCanteen();renderAll()}break}
+    case 'resetAsk':resetModal();break;
+    case 'resetGo':C={seq:C.seq,orders:[],soldOut:[]};saveCanteen();closeModal();renderAll();flash('Demo data cleared');break;
+  }
+});
+document.addEventListener('change',e=>{
+  const t=e.target;
+  if(t.name==='pm'){const w=$('#upiWrap');if(w)w.hidden=t.value!=='upi'}
+  if(t.dataset&&t.dataset.act==='stock'&&adm.in){
+    const id=Number(t.dataset.id);if(!byId[id])return;
+    const out=!t.checked;
+    C.soldOut=C.soldOut.filter(x=>x!==id);if(out)C.soldOut.push(id);
+    saveCanteen();renderAll();
+    const n=document.querySelector(`#manager input[data-act="stock"][data-id="${id}"]`);if(n)n.focus();
+  }
+});
+document.addEventListener('submit',e=>{
+  e.preventDefault();
+  const f=e.target.id;
+  if(f==='gateForm'){
+    const b=Number($('#gB').value),m=Number($('#gM').value),minB=Math.max(10,S.spent);
+    if(!(Number.isInteger(b)&&b>=minB&&b<=500)){flash(`Budget should be a whole number from ₹${minB} to ₹500`);return}
+    if(!(Number.isInteger(m)&&m>=5&&m<=90)){flash('Class time should be 5 to 90 minutes');return}
+    const same=S.started&&!over()&&m===Math.max(5,Math.round(leftMin()));
+    S.budget=b;
+    if(!same)S.deadline=Date.now()+m*60000;
+    const first=!S.started;S.started=true;
+    if(cartInfo().total>remaining()){S.cart={};flash('Budget changed, so your cart was cleared')}
+    saveStudent();closeModal();renderAll();tick();
+    if(first)scheduleToast(rand(8,14));
+  }else if(f==='checkoutForm'){
+    placeOrder();
+  }else if(f==='loginForm'){
+    const err=$('#loginErr'),now=Date.now();
+    if(lock.until>now){err.textContent=`Too many tries. Wait ${Math.ceil((lock.until-now)/1000)}s.`;return}
+    if($('#lu').value.trim()===DEMO_ADMIN.u&&$('#lp').value===DEMO_ADMIN.p){
+      lock.fails=0;adm={in:true,view:'manager'};store.set(K_ADM,adm,'sessionStorage');
+      lastFocus=null;closeModal();setView('manager');
+    }else{
+      lock.fails++;
+      if(lock.fails>=5){lock.until=now+30000;lock.fails=0;err.textContent='Too many tries. Wait 30s.'}
+      else err.textContent='Wrong username or password.';
+    }
+  }
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    if(modalOpen()){if(modalClosable)closeModal();return}
+    const c=$('#cart');if(c.classList.contains('open')){c.classList.remove('open');$('#cartbar').setAttribute('aria-expanded','false');$('#cartbar').focus()}
+    return;
+  }
+  if(e.key==='Tab'&&modalOpen()){
+    const s=sheetEl(),f=focusables(s);
+    if(!f.length){e.preventDefault();s.focus();return}
+    const first=f[0],last=f[f.length-1],a=document.activeElement;
+    if(!s.contains(a)){e.preventDefault();first.focus()}
+    else if(e.shiftKey&&a===first){e.preventDefault();last.focus()}
+    else if(!e.shiftKey&&a===last){e.preventDefault();first.focus()}
+  }
+});
+window.addEventListener('storage',e=>{if(e.key===K_CAN){C=loadCanteen();onCanteenChange()}});
+
+/* ---------- boot ---------- */
+loadStudent();
+C=loadCanteen();
+const a0=store.get(K_ADM,'sessionStorage');
+if(a0&&a0.in===true){adm={in:true,view:a0.view==='manager'?'manager':'student'};if(adm.view==='manager')view='manager'}
+reconcile();
+renderAll();
+checkReady();
+if(view==='student'){
+  if(!S.started)gate();
+  else if(!over())scheduleToast(rand(15,25));
+}
+})();
+</script>
+</body>
+</html>

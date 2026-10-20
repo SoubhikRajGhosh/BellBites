@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>BellBite - food before the bell</title>
+<meta name="referrer" content="no-referrer">
+<!-- CSP: nothing loads from outside, nothing can be sent out. If you edit the JavaScript at the bottom, the hash below must be regenerated (or the page goes blank). -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-Bu7Lh3uUdoI/byK9ve9d8WkUrLMcRNFdkoH2ZtqDNt0='; style-src 'unsafe-inline'; img-src data:; font-src 'none'; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'">
+<style>
+:root{
+  --bg:#F4EFE4; --card:#FFFCF5; --ink:#1B1915; --muted:#6B665A; --line:#E2DAC8;
+  --accent:#E4432A; --accent-d:#C23520; --good:#1E7A4C; --good-bg:#E3F2E8;
+  --warn:#8A5A00; --warn-bg:#FBEBC4; --bad:#B3321F; --bad-bg:#FBE0DA; --gold:#F2B632;
+  --head:'Avenir Next','Segoe UI Variable Display','Trebuchet MS',system-ui,sans-serif;
+  --body:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --r:18px;
+}
+*{box-sizing:border-box;margin:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:var(--body);background:var(--bg);color:var(--ink);line-height:1.4;min-height:100vh;
+  background-image:radial-gradient(circle at 12% -10%,#FBE3C8 0,transparent 38%),radial-gradient(circle at 100% 0,#F9D9D1 0,transparent 30%);
+  background-attachment:fixed}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+input{font:inherit}
+h1,h2,h3{font-family:var(--head);letter-spacing:-.02em}
+
+/* header */
+.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:12px clamp(14px,3vw,32px);background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:8px;font-family:var(--head);font-weight:800;font-size:22px;letter-spacing:-.03em}
+.brand svg{color:var(--accent)}
+.prem-badge{font-family:var(--body);font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;background:var(--ink);color:var(--gold);padding:4px 9px;border-radius:99px}
+.clock{display:flex;align-items:baseline;gap:8px;background:var(--ink);color:#fff;padding:8px 14px;border-radius:14px;white-space:nowrap}
+.clock .lbl{font-size:12px;opacity:.7}
+.clock b{font-family:var(--head);font-size:22px;font-variant-numeric:tabular-nums;letter-spacing:0}
+.clock.warn{background:var(--accent)}
+.clock.warn b{animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.55}}
+
+/* layout */
+.wrap{max-width:1180px;margin:0 auto;padding:22px clamp(14px,3vw,32px) 120px}
+.layout{display:grid;grid-template-columns:1fr 340px;gap:26px;align-items:start}
+.hero h1{font-size:clamp(26px,4.4vw,42px);line-height:1.05;font-weight:800;max-width:18ch}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.hero p{color:var(--muted);margin-top:8px;max-width:48ch}
+
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:18px 0 12px}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:8px 13px;border:1.5px solid var(--ink);border-radius:99px;font-weight:700;font-size:14px;background:var(--card)}
+.pill small{font-weight:500;color:var(--muted);text-decoration:underline}
+.seg{display:flex;gap:4px;padding:4px;background:#E9E1CF;border-radius:99px;overflow-x:auto;max-width:100%}
+.seg button{padding:7px 13px;border-radius:99px;font-size:13px;font-weight:700;color:var(--muted);white-space:nowrap}
+.seg button.on{background:var(--ink);color:#fff}
+
+.queue{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;font-size:13px;color:var(--muted);margin-bottom:14px}
+.queue b{color:var(--ink)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-right:6px;animation:pulse 1.4s infinite}
+
+/* smart pick */
+.pick{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;background:var(--ink);color:#fff;border-radius:var(--r);padding:16px 18px;margin-bottom:18px}
+.pick .k{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}
+.pick .t{font-family:var(--head);font-size:19px;font-weight:600;margin-top:2px}
+.pick .s{font-size:13px;opacity:.75;margin-top:2px}
+
+/* cards */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(205px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px;transition:transform .15s,box-shadow .15s}
+.card:hover{transform:translateY(-2px);box-shadow:0 8px 22px -12px rgba(27,25,21,.35)}
+.card.slow{opacity:.62}
+.ctop{display:flex;gap:12px;align-items:center}
+.ico{width:58px;height:58px;flex:none;border-radius:16px;display:grid;place-items:center;font-size:30px;background:var(--t)}
+.card h3{font-size:16px;font-weight:600;line-height:1.15}
+.price{font-family:var(--head);font-weight:800;font-size:20px}
+.meta{display:flex;gap:12px;font-size:13px;color:var(--muted)}
+.meta .star{color:#B97800;font-weight:700}
+.st{font-size:12px;font-weight:700;padding:5px 9px;border-radius:8px;align-self:flex-start}
+.st.ok{background:var(--good-bg);color:var(--good)}
+.st.pm{background:var(--warn-bg);color:var(--warn)}
+.st.no{background:var(--bad-bg);color:var(--bad)}
+.cfoot{display:flex;justify-content:space-between;align-items:center;margin-top:auto;gap:8px}
+.add{padding:9px 16px;border-radius:12px;background:var(--ink);color:#fff;font-weight:700;font-size:14px}
+.add:active{transform:scale(.96)}
+.step{display:inline-flex;align-items:center;gap:2px;background:#EFE8D8;border-radius:12px;padding:3px}
+.step button{width:32px;height:32px;border-radius:9px;font-weight:800;font-size:17px;background:var(--card)}
+.step span{min-width:26px;text-align:center;font-weight:700}
+.hiddennote{margin-top:16px;font-size:13px;color:var(--muted)}
+.hiddennote button{text-decoration:underline;font-weight:700;color:var(--ink)}
+
+/* cart */
+.cart{position:sticky;top:78px;background:var(--card);border:1.5px solid var(--ink);border-radius:var(--r);padding:18px;box-shadow:6px 6px 0 var(--ink)}
+.cart-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.cart h2{font-size:22px}
+.cart .empty{color:var(--muted);font-size:14px}
+.lines{list-style:none;padding:0;display:flex;flex-direction:column;gap:10px;margin:8px 0 14px}
+.lines li{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px}
+.lines .n{display:flex;flex-direction:column}
+.lines .n small{color:var(--muted)}
+.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px 0;border-block:1px dashed var(--line);margin-bottom:12px}
+.sum div{display:flex;flex-direction:column;font-size:12px;color:var(--muted)}
+.sum b{font-family:var(--head);font-size:19px;color:var(--ink)}
+.verdict{padding:10px 12px;border-radius:12px;font-size:13.5px;font-weight:500;margin-bottom:12px}
+.verdict.good{background:var(--good-bg);color:var(--good)}
+.verdict.bad{background:var(--bad-bg);color:var(--bad)}
+.verdict button{display:block;margin-top:6px;font-weight:700;text-decoration:underline}
+.mob{display:none}
+.cartbar{display:none}
+
+/* buttons */
+.btn{display:block;width:100%;padding:13px 16px;border-radius:14px;font-weight:700;font-size:15px;text-align:center}
+.btn.primary{background:var(--accent);color:#fff}
+.btn.primary:hover{background:var(--accent-d)}
+.btn.gold{background:var(--gold);color:var(--ink)}
+.btn.dark{background:var(--ink);color:#fff}
+.btn.ghost{color:var(--muted);margin-top:4px}
+.btn.big{padding:16px;font-size:16px}
+.btn.sm{width:auto;display:inline-block;padding:10px 16px;background:var(--gold);color:var(--ink)}
+
+/* modal */
+#modal{position:fixed;inset:0;z-index:50;display:none}
+#modal.on{display:block}
+.scrim{position:absolute;inset:0;background:rgba(27,25,21,.55);backdrop-filter:blur(3px)}
+.sheet{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(440px,calc(100vw - 28px));max-height:calc(100vh - 28px);overflow:auto;
+  background:var(--card);border-radius:24px;padding:26px;box-shadow:0 30px 80px -20px rgba(0,0,0,.5);animation:pop .22s ease-out}
+@keyframes pop{from{opacity:0;transform:translate(-50%,-47%) scale(.97)}}
+.sheet h2{font-size:28px;line-height:1.05;margin-bottom:6px}
+.sheet p.sub{color:var(--muted);margin-bottom:16px}
+.sheet label{display:block;font-size:13px;font-weight:700;margin:14px 0 6px}
+.sheet input[type=number],.sheet input[type=text]{width:100%;padding:13px 14px;border:1.5px solid var(--ink);border-radius:12px;background:#fff;font-size:18px;font-weight:700}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.chips button{padding:7px 13px;border-radius:99px;border:1.5px solid var(--line);background:#fff;font-weight:700;font-size:13px}
+.chips button:hover{border-color:var(--ink)}
+.sheet .btn.big{margin-top:20px}
+.fine{font-size:12px;color:var(--muted);text-align:center;margin-top:10px}
+.ribbon{display:inline-block;background:var(--accent);color:#fff;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:5px 10px;border-radius:99px;margin-bottom:10px}
+.pr{display:flex;align-items:baseline;gap:10px;margin:6px 0 14px}
+.pr b{font-family:var(--head);font-size:46px;line-height:1;font-weight:800}
+.pr s{color:var(--muted);font-size:20px}
+.pr span{color:var(--muted)}
+.perks{list-style:none;padding:0;display:flex;flex-direction:column;gap:9px;font-size:14.5px}
+.perks li{display:flex;gap:10px}
+.perks li::before{content:"⚡";flex:none}
+.pay{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+.opt{display:flex;gap:12px;align-items:flex-start;padding:13px;border:1.5px solid var(--line);border-radius:14px;cursor:pointer;background:#fff}
+.opt:has(input:checked){border-color:var(--ink);box-shadow:3px 3px 0 var(--ink)}
+.opt input{margin-top:4px;accent-color:var(--accent)}
+.opt b{display:block}
+.opt small{color:var(--muted)}
+.upi{margin-top:8px}
+.upi input{font-size:15px!important;padding:10px 12px!important}
+.token{font-family:var(--head);font-size:64px;font-weight:800;line-height:1;margin:6px 0;color:var(--accent)}
+.big-t{font-family:var(--head);font-size:34px;font-weight:800;font-variant-numeric:tabular-nums}
+.orow{display:flex;justify-content:space-between;font-size:14px;padding:5px 0}
+
+/* toast + flash */
+#toast{position:fixed;right:18px;bottom:18px;z-index:40;width:min(320px,calc(100vw - 36px));background:var(--gold);color:var(--ink);border:1.5px solid var(--ink);border-radius:18px;padding:14px 16px;
+  box-shadow:5px 5px 0 var(--ink);transform:translateY(140%);transition:transform .35s cubic-bezier(.2,1.2,.4,1)}
+#toast.on{transform:none}
+#toast .tt{font-family:var(--head);font-weight:800;font-size:19px}
+#toast .ts{font-size:13px;margin:2px 0 10px}
+#toast .x{position:absolute;top:6px;right:10px;font-size:20px;line-height:1;opacity:.6}
+#flash{position:fixed;left:50%;bottom:90px;transform:translate(-50%,30px);opacity:0;pointer-events:none;background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;font-weight:500;z-index:60;transition:.25s;max-width:calc(100vw - 30px);text-align:center}
+#flash.on{opacity:1;transform:translate(-50%,0)}
+
+/* mobile */
+@media (max-width:900px){
+  .layout{grid-template-columns:1fr}
+  .cart{position:fixed;left:0;right:0;bottom:0;top:auto;z-index:45;border-radius:22px 22px 0 0;border-width:1.5px 0 0;box-shadow:0 -14px 40px -10px rgba(0,0,0,.4);
+    transform:translateY(105%);transition:transform .3s ease;max-height:82vh;overflow:auto;padding-bottom:max(18px,env(safe-area-inset-bottom))}
+  .cart.open{transform:none}
+  .mob{display:block;font-size:26px;line-height:1;padding:0 6px}
+  .cartbar{position:fixed;left:12px;right:12px;bottom:max(12px,env(safe-area-inset-bottom));z-index:30;display:none;justify-content:space-between;align-items:center;
+    background:var(--ink);color:#fff;border-radius:16px;padding:13px 16px;font-weight:700;box-shadow:0 10px 30px -8px rgba(0,0,0,.5)}
+  .cartbar.on{display:flex}
+  .cartbar small{display:block;font-weight:500;opacity:.75;font-size:12px}
+  #toast{bottom:84px;right:12px}
+  .grid{grid-template-columns:repeat(2,1fr);gap:10px}
+  .ctop{flex-direction:column;align-items:flex-start;gap:8px}
+  .clock .lbl{display:none}
+  .clock{padding:7px 12px}
+  .sheet{padding:22px}
+}
+@media (max-width:380px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+    BellBite <span id="premBadge" class="prem-badge" hidden>Premium</span>
+  </div>
+  <div id="clock" class="clock" aria-live="off"><span class="lbl">Next class in</span><b id="clockT">--:--</b></div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <h1 id="heroT">Food before the bell.</h1>
+    <p id="heroP">Tell us your budget and your break. We sort the canteen by what you can actually eat in time.</p>
+  </section>
+
+  <div class="bar">
+    <button class="pill" data-act="editGate" id="budgetPill">Budget ₹60 <small>edit</small></button>
+    <div class="seg" id="seg">
+      <button data-act="sort" data-v="match" class="on">Best match</button>
+      <button data-act="sort" data-v="price">Price</button>
+      <button data-act="sort" data-v="rating">Rating</button>
+      <button data-act="sort" data-v="time">Fastest to make</button>
+    </div>
+  </div>
+  <div class="queue" id="queue"></div>
+
+  <div class="layout">
+    <div>
+      <div id="pick"></div>
+      <div class="grid" id="grid"></div>
+      <p class="hiddennote" id="hiddenNote"></p>
+    </div>
+    <aside class="cart" id="cart"></aside>
+  </div>
+</main>
+
+<button class="cartbar" id="cartbar" data-act="toggleCart"></button>
+<div id="toast" role="status"></div>
+<div id="flash"></div>
+<div id="modal"></div>
+
+<script>
+(()=>{'use strict';
+/* ---------- data ---------- */
+const MENU=[
+ {id:1, name:'Masala Chai',        price:10, rate:4.7, prep:2, type:'drink', icon:'☕', tint:'#F6E3C8'},
+ {id:2, name:'Veg Puff',           price:15, rate:4.1, prep:1, type:'food',  icon:'🥐', tint:'#F9E2B5'},
+ {id:3, name:'Fresh Lime Water',   price:15, rate:4.0, prep:1, type:'drink', icon:'🍋', tint:'#F3F0B3'},
+ {id:4, name:'Samosa (2 pc)',      price:20, rate:4.4, prep:2, type:'food',  icon:'🥟', tint:'#F5D9B8'},
+ {id:5, name:'Poha',               price:20, rate:4.0, prep:3, type:'food',  icon:'🥣', tint:'#F8E8A8'},
+ {id:6, name:'Mango Frooti',       price:20, rate:4.0, prep:0, type:'drink', icon:'🧃', tint:'#FBD9A0'},
+ {id:7, name:'Lemon Soda',         price:20, rate:4.1, prep:1, type:'drink', icon:'🥤', tint:'#D5EFC6'},
+ {id:8, name:'Idli (2 pc)',        price:25, rate:4.3, prep:3, type:'food',  icon:'🍙', tint:'#ECE9E0'},
+ {id:9, name:'Bread Omelette',     price:30, rate:4.2, prep:5, type:'food',  icon:'🍳', tint:'#FBE7A1'},
+ {id:10,name:'Veg Maggi',          price:30, rate:4.5, prep:6, type:'food',  icon:'🍜', tint:'#F9DDA4'},
+ {id:11,name:'Fruit Bowl',         price:30, rate:4.2, prep:2, type:'food',  icon:'🍉', tint:'#FAD0CB'},
+ {id:12,name:'Cold Coffee',        price:35, rate:4.5, prep:3, type:'drink', icon:'🧋', tint:'#E6D3BF'},
+ {id:13,name:'Veg Sandwich',       price:35, rate:4.0, prep:4, type:'food',  icon:'🥪', tint:'#E2EDC4'},
+ {id:14,name:'Veg Burger',         price:35, rate:3.8, prep:4, type:'food',  icon:'🍔', tint:'#F5D3B0'},
+ {id:15,name:'Veg Roll',           price:35, rate:4.1, prep:5, type:'food',  icon:'🌯', tint:'#EAD9B7'},
+ {id:16,name:'Masala Dosa',        price:40, rate:4.6, prep:7, type:'food',  icon:'🥞', tint:'#F6DDAA'},
+ {id:17,name:'French Fries',       price:40, rate:4.2, prep:5, type:'food',  icon:'🍟', tint:'#FBE29A'},
+ {id:18,name:'Egg Maggi',          price:40, rate:4.3, prep:7, type:'food',  icon:'🍜', tint:'#F7D6A0'},
+ {id:19,name:'Grilled Cheese Sandwich',price:45,rate:4.4,prep:6,type:'food', icon:'🧀', tint:'#FBE08B'},
+ {id:20,name:'Chole Bhature',      price:50, rate:4.6, prep:8, type:'food',  icon:'🫓', tint:'#F3D1A6'},
+ {id:21,name:'Paneer Roll',        price:50, rate:4.4, prep:7, type:'food',  icon:'🌯', tint:'#F4D7BE'},
+ {id:22,name:'Veg Fried Rice',     price:55, rate:3.9, prep:9, type:'food',  icon:'🍚', tint:'#EEE6C8'}
+];
+const byId=Object.fromEntries(MENU.map(i=>[i.id,i]));
+const EAT=3; // minutes you need to actually eat
+
+/* ---------- state ---------- */
+const S={budget:60,deadline:0,premium:false,sort:'match',cart:{},queue:14,started:false,order:null,toastT:null,hideT:null};
+const $=s=>document.querySelector(s);
+const leftMin=()=>Math.max(0,(S.deadline-Date.now())/60000);
+const lane=()=>Math.max(1,Math.round(S.queue*0.12));
+const lead=()=>S.premium?lane():S.queue;
+const readyFor=(it,l=lead())=>l+it.prep;
+const fits=(m,left=leftMin())=>m+EAT<=left;
+const mmss=ms=>{const s=Math.max(0,Math.ceil(ms/1000));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')};
+const rand=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const MAXQ=5; // max of one item per order
+
+function cartInfo(l=lead()){
+  let total=0,qty=0,mx=0;
+  for(const id in S.cart){const it=byId[id],q=S.cart[id];total+=it.price*q;qty+=q;mx=Math.max(mx,it.prep)}
+  const extra=Math.ceil(Math.max(0,qty-1)*0.5);
+  return {total,qty,ready:qty?l+mx+extra:0};
+}
+
+/* ---------- render ---------- */
+function decorate(){
+  const left=leftMin();
+  return MENU.filter(i=>i.price<=S.budget).map(i=>{
+    const r=readyFor(i), rp=readyFor(i,lane());
+    return {...i,r,rp,ok:fits(r,left),okP:fits(rp,left)};
+  });
+}
+function sortItems(a){
+  const s=S.sort;
+  return a.sort((x,y)=>{
+    if(s==='price')return x.price-y.price||y.rate-x.rate;
+    if(s==='rating')return y.rate-x.rate||x.price-y.price;
+    if(s==='time')return x.prep-y.prep||y.rate-x.rate;
+    return (y.ok-x.ok)||(y.okP-x.okP)||(y.rate-x.rate)||(x.price-y.price);
+  });
+}
+function renderMenu(){
+  const items=sortItems(decorate());
+  $('#grid').innerHTML=items.map(i=>{
+    const q=S.cart[i.id]||0;
+    let st;
+    if(i.ok) st=`<span class="st ok">Makes it · ready in ${i.r} min</span>`;
+    else if(!S.premium&&i.okP) st=`<span class="st pm">⚡ Premium makes it · ${i.rp} min</span>`;
+    else st=`<span class="st no">Too slow · ${i.r} min</span>`;
+    const ctl=q?`<div class="step"><button data-act="dec" data-id="${i.id}" aria-label="Remove one">−</button><span>${q}</span><button data-act="inc" data-id="${i.id}" aria-label="Add one">+</button></div>`
+              :`<button class="add" data-act="inc" data-id="${i.id}">Add</button>`;
+    return `<article class="card ${i.ok?'':'slow'}">
+      <div class="ctop"><div class="ico" style="--t:${esc(i.tint)}" aria-hidden="true">${esc(i.icon)}</div>
+        <div><h3>${esc(i.name)}</h3><div class="meta"><span class="star">★ ${i.rate.toFixed(1)}</span><span>${i.prep===0?'Grab &amp; go':i.prep+' min to make'}</span></div></div></div>
+      ${st}
+      <div class="cfoot"><span class="price">₹${i.price}</span>${ctl}</div></article>`;
+  }).join('');
+  const hidden=MENU.length-items.length;
+  $('#hiddenNote').innerHTML=hidden?`${hidden} item${hidden>1?'s':''} above ₹${S.budget} hidden. <button data-act="editGate">Change budget</button>`:'';
+}
+function renderPick(){
+  const d=decorate();
+  const good=d.filter(i=>S.premium?i.okP:i.ok).sort((a,b)=>b.rate-a.rate||a.price-b.price);
+  const food=good.find(i=>i.type==='food');
+  let combo=[];
+  if(food){
+    combo=[food];
+    const drink=good.find(i=>i.type==='drink'&&i.price<=S.budget-food.price);
+    if(drink)combo.push(drink);
+  }else if(good.length)combo=[good[0]];
+  const el=$('#pick');
+  if(combo.length){
+    const total=combo.reduce((a,b)=>a+b.price,0);
+    const ready=Math.max(...combo.map(i=>S.premium?i.rp:i.r));
+    el.innerHTML=`<div class="pick"><div><div class="k">Smart pick</div><div class="t">${combo.map(i=>esc(i.icon+' '+i.name)).join(' + ')}</div>
+      <div class="s">₹${total} · ready in ${ready} min · best rated that fits your time and budget</div></div>
+      <button class="btn sm" data-act="pickAdd" data-ids="${combo.map(i=>i.id).join(',')}">Add pick</button></div>`;
+  }else if(!S.premium){
+    el.innerHTML=`<div class="pick"><div><div class="k">Heads up</div><div class="t">The queue is longer than your break.</div>
+      <div class="s">Priority lane brings the wait down to about ${lane()} min.</div></div>
+      <button class="btn sm" data-act="premium">Skip the queue</button></div>`;
+  }else{
+    el.innerHTML=`<div class="pick"><div><div class="k">Heads up</div><div class="t">Not enough time for a proper meal.</div><div class="s">Try a grab-and-go item.</div></div></div>`;
+  }
+}
+function renderQueue(){
+  $('#queue').innerHTML=S.premium
+    ?`<span><span class="dot"></span>Canteen queue <b>≈ ${S.queue} min</b></span><span>You're in the priority lane: <b>≈ ${lane()} min</b></span>`
+    :`<span><span class="dot"></span>Canteen queue <b>≈ ${S.queue} min</b></span><span>Priority lane: <b>≈ ${lane()} min</b> with Premium</span>`;
+}
+function renderCart(){
+  const c=cartInfo(), left=leftMin();
+  let h=`<div class="cart-h"><h2>Your order</h2><button class="mob" data-act="toggleCart" aria-label="Close">×</button></div>`;
+  if(!c.qty){
+    h+=`<p class="empty">Nothing yet. Add something and we'll tell you if you'll be back before the bell.</p>`;
+  }else{
+    h+='<ul class="lines">'+Object.keys(S.cart).map(id=>{
+      const it=byId[id],q=S.cart[id];
+      return `<li><span class="n">${esc(it.icon)} ${esc(it.name)}<small>₹${it.price} each</small></span>
+        <span class="step"><button data-act="dec" data-id="${id}" aria-label="Remove one">−</button><span>${q}</span><button data-act="inc" data-id="${id}" aria-label="Add one">+</button></span></li>`;
+    }).join('')+'</ul>';
+    h+=`<div class="sum"><div>Total<b>₹${c.total}</b></div><div>Budget left<b>₹${S.budget-c.total}</b></div><div>Ready in<b>${c.ready} min</b></div></div>`;
+    if(fits(c.ready,left)){
+      h+=`<div class="verdict good">You'll make it. About ${Math.floor(left-c.ready)} min to eat before class.</div>`;
+    }else{
+      const late=Math.ceil(c.ready+EAT-left);
+      const pOk=!S.premium&&fits(cartInfo(lane()).ready,left);
+      h+=`<div class="verdict bad">Too slow by about ${late} min.${pOk?`<button data-act="premium">Priority lane would fix this</button>`:' Try removing the slowest item.'}</div>`;
+    }
+    h+=`<button class="btn primary" data-act="checkout">Checkout · ₹${c.total}</button>`;
+  }
+  $('#cart').innerHTML=h;
+  const bar=$('#cartbar');
+  bar.classList.toggle('on',c.qty>0);
+  bar.innerHTML=`<span>${c.qty} item${c.qty>1?'s':''} · ₹${c.total}<small>Ready in ${c.ready} min</small></span><span>View order →</span>`;
+}
+function renderHero(){
+  const m=Math.floor(leftMin());
+  $('#heroT').innerHTML=S.started?`You have <em>${m} min</em> and <em>₹${S.budget}</em>.`:'Food before the bell.';
+  $('#heroP').textContent=S.started?"Here's what you can eat and still make it to class.":'Tell us your budget and your break. We sort the canteen by what you can actually eat in time.';
+  $('#budgetPill').innerHTML=`Budget ₹${S.budget} <small>edit</small>`;
+  $('#premBadge').hidden=!S.premium;
+}
+function renderAll(){renderHero();renderQueue();renderPick();renderMenu();renderCart();
+  $('#seg').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.sort));}
+
+/* ---------- clock ---------- */
+function tick(){
+  const ms=Math.max(0,S.deadline-Date.now());
+  const c=$('#clock');
+  if(!S.started){$('#clockT').textContent='--:--';return}
+  $('#clockT').textContent=ms?mmss(ms):'Started';
+  c.classList.toggle('warn',ms>0&&ms<5*60000);
+  if(S.order){const t=$('#orderT');if(t){const r=S.order.at-Date.now();t.textContent=r>0?mmss(r):'Ready!'}}
+}
+setInterval(tick,1000);
+setInterval(()=>{ // live queue wobble
+  if(!S.started)return;
+  S.queue=Math.min(20,Math.max(8,S.queue+rand(-2,2)));
+  if(!$('#modal').classList.contains('on'))renderAll();else{renderQueue()}
+},12000);
+
+/* ---------- modal / toast / flash ---------- */
+function openModal(html,closable=true){
+  const m=$('#modal');
+  m.innerHTML=`<div class="scrim" ${closable?'data-act="close"':''}></div><div class="sheet" role="dialog" aria-modal="true">${html}</div>`;
+  m.classList.add('on');hideToast();
+}
+function closeModal(){$('#modal').classList.remove('on');$('#modal').innerHTML='';}
+function flash(msg){const f=$('#flash');f.textContent=msg;f.classList.add('on');clearTimeout(flash.t);flash.t=setTimeout(()=>f.classList.remove('on'),2200)}
+function hideToast(){$('#toast').classList.remove('on')}
+const TOASTS=[['Want food fast?','Skip the canteen queue for ₹99/month.'],['Queue too long?','Priority lane gets you served first.'],['Short on time?','Premium cuts the wait to a couple of minutes.']];
+function showToast(){
+  if(S.premium||!S.started||$('#modal').classList.contains('on'))return scheduleToast(rand(20,30));
+  const [t,s]=TOASTS[rand(0,TOASTS.length-1)];
+  $('#toast').innerHTML=`<button class="x" data-act="toastX" aria-label="Dismiss">×</button><div class="tt">⚡ ${t}</div><div class="ts">${s}</div><button class="btn sm dark" style="background:var(--ink);color:#fff" data-act="premium">Skip the queue</button>`;
+  $('#toast').classList.add('on');
+  clearTimeout(S.hideT);S.hideT=setTimeout(()=>{hideToast();scheduleToast(rand(35,60))},12000);
+}
+function scheduleToast(sec){clearTimeout(S.toastT);if(S.premium)return;S.toastT=setTimeout(showToast,sec*1000)}
+
+/* ---------- screens ---------- */
+function gate(){
+  const mins=S.started?Math.max(5,Math.round(leftMin())):20;
+  openModal(`<h2>Before the bell rings</h2><p class="sub">Two numbers, and we sort the canteen for you.</p>
+    <label for="gB">Your budget (₹)</label>
+    <input id="gB" type="number" inputmode="numeric" min="10" max="500" value="${S.budget}">
+    <div class="chips">${[20,30,40,60,80].map(v=>`<button data-act="setB" data-v="${v}">₹${v}</button>`).join('')}</div>
+    <label for="gM">Minutes until your next class</label>
+    <input id="gM" type="number" inputmode="numeric" min="5" max="90" value="${mins}">
+    <div class="chips">${[10,15,20,30,45].map(v=>`<button data-act="setM" data-v="${v}">${v} min</button>`).join('')}</div>
+    <button class="btn primary big" data-act="start">Show me food</button>`,S.started);
+}
+function premiumModal(){
+  openModal(`<span class="ribbon">First-time price</span><h2>BellBite Premium</h2>
+    <div class="pr"><b>₹99</b><s>₹249</s><span>/ month</span></div>
+    <ul class="perks"><li>Priority lane: queue wait drops from about ${S.queue} min to about ${lane()} min</li><li>See which items you can only make in time with Premium</li><li>Cancel anytime</li></ul>
+    <button class="btn gold big" data-act="subscribe">Pay ₹99 with UPI (demo)</button>
+    <button class="btn ghost" data-act="close">Not now</button>
+    <p class="fine">Demo only. No real payment is taken.</p>`);
+}
+function checkoutModal(){
+  const c=cartInfo();
+  openModal(`<h2>Checkout</h2><p class="sub">${c.qty} item${c.qty>1?'s':''} · ready in about ${c.ready} min</p>
+    ${Object.keys(S.cart).map(id=>`<div class="orow"><span>${esc(byId[id].icon)} ${esc(byId[id].name)} × ${S.cart[id]}</span><b>₹${byId[id].price*S.cart[id]}</b></div>`).join('')}
+    <div class="orow" style="border-top:1px dashed var(--line);margin-top:6px;padding-top:10px"><b>Total</b><b>₹${c.total}</b></div>
+    <label>Pay with</label>
+    <div class="pay">
+      <label class="opt"><input type="radio" name="pm" value="upi" checked><span><b>UPI</b><small>GPay, PhonePe, Paytm</small><div class="upi"><input type="text" id="upiId" placeholder="yourname@upi" value="demo@upi" maxlength="50" autocomplete="off" spellcheck="false"></div></span></label>
+      <label class="opt"><input type="radio" name="pm" value="counter"><span><b>Pay at counter</b><small>Pay when you collect. Token held for 5 min.</small></span></label>
+    </div>
+    <button class="btn primary big" data-act="pay">Place order</button>
+    <button class="btn ghost" data-act="close">Back</button>
+    <p class="fine">Demo only. No real payment is taken.</p>`);
+  document.querySelectorAll('input[name=pm]').forEach(r=>r.addEventListener('change',()=>{
+    document.querySelector('.upi').style.display=r.value==='upi'&&r.checked?'block':(r.value==='counter'&&r.checked?'none':document.querySelector('.upi').style.display)}));
+}
+function placeOrder(){
+  const c=cartInfo();
+  if(!c.qty||c.total>S.budget)return;
+  const sel=document.querySelector('input[name=pm]:checked');
+  const pm=sel&&sel.value==='counter'?'counter':'upi';
+  if(pm==='upi'&&!/^[a-zA-Z0-9._-]{2,40}@[a-zA-Z]{2,20}$/.test(($('#upiId')||{}).value||'')){flash('Enter a valid UPI ID, like name@upi');return}
+  const token=(S.premium?'P-':'B-')+rand(10,99);
+  const at=Date.now()+c.ready*60000;
+  S.order={token,at};
+  const clock=new Date(at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  S.cart={};
+  openModal(`<span class="ribbon" style="background:var(--good)">Order placed</span><h2>Your token</h2>
+    <div class="token">${token}</div>
+    <p class="sub">${pm==='upi'?'Paid by UPI (demo).':'Pay at the counter when you collect.'} ${S.premium?'Show this at the priority lane.':''}</p>
+    <div class="orow"><span>Ready in</span><span class="big-t" id="orderT">${mmss(c.ready*60000)}</span></div>
+    <div class="orow"><span>Ready around</span><b>${clock}</b></div>
+    <button class="btn dark big" data-act="done">Done</button>`,false);
+  renderAll();
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-act]');if(!t)return;
+  const act=t.dataset.act,id=t.dataset.id;
+  switch(act){
+    case 'inc':{
+      const it=byId[id],c=cartInfo();
+      if(!it)return;
+      if((S.cart[id]||0)>=MAXQ){flash('Max '+MAXQ+' of one item');return}
+      if(c.total+it.price>S.budget){flash(`Over budget by ₹${c.total+it.price-S.budget}`);return}
+      S.cart[id]=(S.cart[id]||0)+1;renderAll();break}
+    case 'dec':if(!S.cart[id])return;S.cart[id]--;if(S.cart[id]<=0)delete S.cart[id];renderAll();break;
+    case 'pickAdd':
+      t.dataset.ids.split(',').forEach(i=>{const it=byId[i];if(it&&cartInfo().total+it.price<=S.budget&&(S.cart[i]||0)<MAXQ)S.cart[i]=(S.cart[i]||0)+1});
+      renderAll();flash('Pick added to your order');break;
+    case 'sort':S.sort=t.dataset.v;renderAll();break;
+    case 'editGate':gate();break;
+    case 'setB':$('#gB').value=t.dataset.v;break;
+    case 'setM':$('#gM').value=t.dataset.v;break;
+    case 'start':{
+      const b=Number($('#gB').value),m=Number($('#gM').value);
+      if(!(Number.isInteger(b)&&b>=10&&b<=500)){flash('Budget should be a whole number from ₹10 to ₹500');return}
+      if(!(Number.isInteger(m)&&m>=5&&m<=90)){flash('Class time should be 5 to 90 minutes');return}
+      if(S.started&&b!==S.budget)S.cart={};
+      S.budget=b;S.deadline=Date.now()+m*60000;
+      const first=!S.started;S.started=true;
+      closeModal();renderAll();tick();
+      if(first)scheduleToast(rand(8,14));
+      break}
+    case 'premium':hideToast();premiumModal();break;
+    case 'toastX':hideToast();clearTimeout(S.hideT);scheduleToast(rand(35,60));break;
+    case 'subscribe':
+      S.premium=true;clearTimeout(S.toastT);closeModal();renderAll();flash('Premium on. Priority lane unlocked.');break;
+    case 'checkout':if(!cartInfo().qty)return;$('#cart').classList.remove('open');checkoutModal();break;
+    case 'pay':placeOrder();break;
+    case 'done':closeModal();S.order=null;break;
+    case 'close':closeModal();break;
+    case 'toggleCart':$('#cart').classList.toggle('open');break;
+  }
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&$('#modal').classList.contains('on')&&S.started&&!S.order)closeModal();
+  if(e.key==='Enter'&&document.activeElement&&(document.activeElement.id==='gB'||document.activeElement.id==='gM'))document.querySelector('[data-act=start]').click();
+});
+
+/* ---------- boot ---------- */
+renderAll();gate();
+})();
+</script>
+</body>
+</html>
